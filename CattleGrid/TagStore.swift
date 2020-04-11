@@ -10,6 +10,11 @@ import Foundation
 import SwiftUI
 import CoreNFC
 
+enum MifareCommands : UInt8 {
+    case read = 0x30
+
+}
+
 class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     static let shared = TagStore()
 
@@ -42,20 +47,50 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     func tagReaderSession(_ session: NFCTagReaderSession, didDetect tags: [NFCTag]) {
         print("didDetect: \(tags)")
 
-        switch tags.first! {
-            case let .iso7816(tag):
-                print("iso7816 \(tag)")
-                break
-            case let .iso15693(tag):
-                print("iso15693 \(tag)")
-                break
-            case let .miFare(tag):
-                print("miFare \(tag)")
-                break
-            default:
-                print("unhandled tag type")
+        if case let NFCTag.miFare(tag) = tags.first! {
+            guard tag.mifareFamily == .ultralight else {
+                print("Ignoring non-ultralight \(tag.mifareFamily)")
                 return
+            }
+
+            session.connect(to: tags.first!) { (error: Error?) in
+                if ((error) != nil) {
+                    print(error as Any)
+                    return
+                }
+
+                self.connected(tag)
+            }
+        } else {
+            print("Ignoring non-mifare tag")
         }
     }
 
+    func connected(_ tag: NFCMiFareTag) {
+        let command = Data([MifareCommands.read.rawValue, 0x00])
+
+        tag.sendMiFareCommand(commandPacket: command) { (data, error) in
+            if ((error) != nil) {
+                print(error as Any)
+                return
+            }
+            print(data.hexDescription)
+
+            let uid = data.subdata(in: 0..<7)
+            let cc = data.subdata(in: 12..<16) // f1 10 ff ee
+            let pwd = self.calculatePWD(tag.identifier)
+
+            print("\(uid.hexDescription): \(cc.hexDescription) \(pwd.hexDescription)")
+        }
+    }
+
+    func calculatePWD(_ uid: Data) -> Data {
+        print(uid.hexDescription)
+        var PWD = Data(count: 4)
+        PWD[0] = uid[1] ^ uid[3] ^ 0xAA
+        PWD[1] = uid[2] ^ uid[4] ^ 0x55
+        PWD[2] = uid[3] ^ uid[5] ^ 0xAA
+        PWD[3] = uid[4] ^ uid[6] ^ 0x55
+        return PWD
+    }
 }

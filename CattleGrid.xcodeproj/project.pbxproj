@@ -14,6 +14,7 @@
 		6DC58615244171AB006DA042 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6DC58614244171AB006DA042 /* Preview Assets.xcassets */; };
 		6DC58618244171AB006DA042 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6DC58616244171AB006DA042 /* LaunchScreen.storyboard */; };
 		6DC58621244172B2006DA042 /* TagStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC58620244172B2006DA042 /* TagStore.swift */; };
+		6DC58623244178F1006DA042 /* Data+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC58622244178F1006DA042 /* Data+Hex.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +28,7 @@
 		6DC58619244171AB006DA042 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6DC5861F2441721B006DA042 /* CattleGrid.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CattleGrid.entitlements; sourceTree = "<group>"; };
 		6DC58620244172B2006DA042 /* TagStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagStore.swift; sourceTree = "<group>"; };
+		6DC58622244178F1006DA042 /* Data+Hex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Data+Hex.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -59,6 +61,7 @@
 		6DC5860A24417199006DA042 /* CattleGrid */ = {
 			isa = PBXGroup;
 			children = (
+				6DC58622244178F1006DA042 /* Data+Hex.swift */,
 				6DC5861F2441721B006DA042 /* CattleGrid.entitlements */,
 				6DC5860B24417199006DA042 /* AppDelegate.swift */,
 				6DC5860D24417199006DA042 /* SceneDelegate.swift */,
@@ -152,6 +155,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6DC5860C24417199006DA042 /* AppDelegate.swift in Sources */,
+				6DC58623244178F1006DA042 /* Data+Hex.swift in Sources */,
 				6DC5860E24417199006DA042 /* SceneDelegate.swift in Sources */,
 				6DC58621244172B2006DA042 /* TagStore.swift in Sources */,
 				6DC5861024417199006DA042 /* ContentView.swift in Sources */,
