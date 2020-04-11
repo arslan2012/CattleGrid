@@ -11,9 +11,12 @@ import SwiftUI
 import CoreNFC
 
 enum MifareCommands : UInt8 {
-    case read = 0x30
-
+    case READ = 0x30
+    case WRITE = 0xa2
+    case PWD_AUTH = 0x1B
 }
+
+let PACK = Data([0x80, 0x80])
 
 class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     static let shared = TagStore()
@@ -67,20 +70,52 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     }
 
     func connected(_ tag: NFCMiFareTag) {
-        let command = Data([MifareCommands.read.rawValue, 0x00])
 
-        tag.sendMiFareCommand(commandPacket: command) { (data, error) in
+        let pwd = self.calculatePWD(tag.identifier)
+        print("\(tag.identifier.hexDescription): \(pwd.hexDescription)")
+
+        //let read = Data([MifareCommands.READ.rawValue, 0x00])
+        //let uid = data.subdata(in: 0..<7)
+        //TODO: valudate CC is correct for blank tag.
+        //let cc = data.subdata(in: 12..<16) // f1 10 ff ee
+
+
+        let auth = Data([MifareCommands.PWD_AUTH.rawValue, pwd[0], pwd[1], pwd[2], pwd[3]])
+        tag.sendMiFareCommand(commandPacket: auth) { (data, error) in
             if ((error) != nil) {
                 print(error as Any)
                 return
             }
-            print(data.hexDescription)
+            if (data != PACK) {
+                print("Error authenticating amiibo")
+                return
+            }
+        }
 
-            let uid = data.subdata(in: 0..<7)
-            let cc = data.subdata(in: 12..<16) // f1 10 ff ee
-            let pwd = self.calculatePWD(tag.identifier)
+        self.dumpTag(tag) { (contents) in
+            print(contents.hexDescription)
+        }
+    }
 
-            print("\(uid.hexDescription): \(cc.hexDescription) \(pwd.hexDescription)")
+    func dumpTag(_ tag: NFCMiFareTag, completionHandler: @escaping (Data) -> Void) {
+        self.readAllPages(tag, startPage: 4, completionHandler: completionHandler)
+    }
+
+    func readAllPages(_ tag: NFCMiFareTag, startPage: UInt8, completionHandler: @escaping (Data) -> Void) {
+        if (startPage > 129) {
+            completionHandler(Data())
+            return
+        }
+        print("Read page \(startPage)")
+        let read = Data([MifareCommands.READ.rawValue, startPage])
+        tag.sendMiFareCommand(commandPacket: read) { (data, error) in
+            if ((error) != nil) {
+                print(error as Any)
+                return
+            }
+            self.readAllPages(tag, startPage: startPage+4) { (contents) in
+                completionHandler(data + contents)
+            }
         }
     }
 
@@ -93,4 +128,6 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         PWD[3] = uid[4] ^ uid[6] ^ 0x55
         return PWD
     }
+
+
 }
