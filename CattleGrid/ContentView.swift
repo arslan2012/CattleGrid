@@ -9,13 +9,24 @@
 import SwiftUI
 
 struct ContentView: View {
+    @EnvironmentObject var tagStore: TagStore
     var body: some View {
-        Text("Hello, World!")
+        VStack(alignment: .center) {
+            //File selector
+            //button to say 'go'
+            Text("Hello, World!")
+            Button(action: self.tagStore.start) {
+                 Image(systemName: "square.and.pencil")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+            }
+        }
+        .padding()        
     }
 }
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
+        ContentView().environmentObject(TagStore.shared)
     }
 }
