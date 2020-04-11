@@ -25,22 +25,6 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     func start() {
         print("Hello world")
 
-
-        do {            
-            let count = 1
-            let amiiboKeys = UnsafeMutablePointer<nfc3d_amiibo_keys>.allocate(capacity: count)
-            //pointer.initialize(repeating: 0, count: count)
-            defer {
-              //pointer.deinitialize(count: count)
-              amiiboKeys.deallocate()
-            }
-            let path = Bundle.main.path(forResource: "key_retail", ofType: "bin")
-            print("path = \(path!)")
-            nfc3d_amiibo_load_keys(amiiboKeys, path)
-            print(amiiboKeys.pointee.data)
-        }
-
-
         guard NFCReaderSession.readingAvailable else {
             print("NFCReaderSession.readingAvailable failed")
             return
@@ -113,11 +97,37 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
 
         self.dumpTag(tag) { (dump) in
             print(dump.hexDescription)
+
+            do {
+                let path = Bundle.main.path(forResource: "key_retail", ofType: "bin")!
+                let amiiboKeys = UnsafeMutablePointer<nfc3d_amiibo_keys>.allocate(capacity: 1)
+                defer {
+                  amiiboKeys.deallocate()
+                }
+
+                if (!nfc3d_amiibo_load_keys(amiiboKeys, path)) {
+                    print("Could not load keys from \(path)")
+                    return
+                }
+                print(amiiboKeys.pointee.data)
+                let output = UnsafeMutablePointer<UInt8>.allocate(capacity: dump.count)
+
+                let unsafeDump : UnsafePointer<UInt8> = dump.withUnsafeBytes { bytes in
+                    return bytes
+                }
+                nfc3d_amiibo_unpack(amiiboKeys, unsafeDump, output)
+                let plain = Data(bytes: output, count: dump.count)
+                print("Unpacked: \(plain.hexDescription)")
+
+                //nfc3d_amiibo_unpack(<#T##amiiboKeys: UnsafePointer<nfc3d_amiibo_keys>!##UnsafePointer<nfc3d_amiibo_keys>!#>, <#T##tag: UnsafePointer<UInt8>!##UnsafePointer<UInt8>!#>, <#T##plain: UnsafeMutablePointer<UInt8>!##UnsafeMutablePointer<UInt8>!#>)
+
+            }
+
         }
     }
 
     func dumpTag(_ tag: NFCMiFareTag, completionHandler: @escaping (Data) -> Void) {
-        self.readAllPages(tag, startPage: 4, completionHandler: completionHandler)
+        self.readAllPages(tag, startPage: 0, completionHandler: completionHandler)
     }
 
     func readAllPages(_ tag: NFCMiFareTag, startPage: UInt8, completionHandler: @escaping (Data) -> Void) {
