@@ -9,6 +9,7 @@
 import Foundation
 import SwiftUI
 import CoreNFC
+import amiitool
 
 enum MifareCommands : UInt8 {
     case READ = 0x30
