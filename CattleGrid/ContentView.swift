@@ -27,7 +27,9 @@ struct ContentView: View {
                  Image(systemName: "square.and.pencil")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
+                .disabled(self.tagStore.selected == nil)
             }
+
         }
         .padding()
         .onAppear(perform: self.tagStore.start)
