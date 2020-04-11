@@ -72,13 +72,13 @@
 				6DC5860B24417199006DA042 /* AppDelegate.swift */,
 				6DC5860D24417199006DA042 /* SceneDelegate.swift */,
 				6DC5860F24417199006DA042 /* ContentView.swift */,
-				6DD45BC32442654100C5C925 /* AmiiboImage.swift */,
 				6DC58611244171AB006DA042 /* Assets.xcassets */,
 				6DC58616244171AB006DA042 /* LaunchScreen.storyboard */,
 				6DC58619244171AB006DA042 /* Info.plist */,
 				6DC58613244171AB006DA042 /* Preview Content */,
-				6DC58620244172B2006DA042 /* TagStore.swift */,
 				6DD45BC12442463F00C5C925 /* key_retail.bin */,
+				6DD45BC32442654100C5C925 /* AmiiboImage.swift */,
+				6DC58620244172B2006DA042 /* TagStore.swift */,
 			);
 			path = CattleGrid;
 			sourceTree = "<group>";

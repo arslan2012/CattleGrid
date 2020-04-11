@@ -14,6 +14,7 @@ struct ContentView: View {
     var body: some View {
         VStack(alignment: .center) {
             Text("CattleGate").font(.largeTitle)
+            Text("\(progress())%").font(.subheadline)
             //File selector
             NavigationView {
                 List(tagStore.amiibos) { amiibo in
@@ -33,6 +34,10 @@ struct ContentView: View {
         }
         .padding()
         .onAppear(perform: self.tagStore.start)
+    }
+
+    func progress() -> Float {
+        return Float(tagStore.lastPageWritten) / Float(NTAG215Pages.total.rawValue) * 100
     }
 }
 

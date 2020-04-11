@@ -27,14 +27,17 @@ enum NTAG215Pages : UInt8 {
     case cfg0 = 131
     case cfg1 = 132
     case pwd = 133
+    case pack = 134
+    case total = 135
 }
 
-let PACK = Data([0x80, 0x80])
+let PACKRFUI = Data([0x80, 0x80, 0x00, 0x00])
 
 class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     static let shared = TagStore()
     @Published private(set) var amiibos: [AmiiboImage] = []
     @Published private(set) var selected: AmiiboImage?
+    @Published private(set) var lastPageWritten : UInt8 = 0
 
     var amiiboKeys : UnsafeMutablePointer<nfc3d_amiibo_keys> = UnsafeMutablePointer<nfc3d_amiibo_keys>.allocate(capacity: 1)
     var plain : Data = Data()
@@ -165,18 +168,40 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
 
             self.writeTag(tag, newImage: new) { () in
                 print("done writing")
+                DispatchQueue.main.async {
+                    self.lastPageWritten = 0
+                }
             }
 
         }
     }
 
     func writeTag(_ tag: NFCMiFareTag, newImage: Data, completionHandler: @escaping () -> Void) {
-        self.writeUserPages(tag, startPage: NTAG215Pages.userMemoryFirst.rawValue, data: newImage, completionHandler: completionHandler)
-        //write CC
-        //write PWD
-        //let pwd = self.calculatePWD(tag.identifier)
-        //write PACK
-        //etc
+        self.writeUserPages(tag, startPage: NTAG215Pages.userMemoryFirst.rawValue, data: newImage) { () in
+            //write PWD
+            let pwd = self.calculatePWD(tag.identifier)
+            print("\(tag.identifier.hexDescription): \(pwd.hexDescription)")
+            self.writePage(tag, page: NTAG215Pages.pwd.rawValue, data: pwd) {
+                self.writePage(tag, page: NTAG215Pages.pack.rawValue, data: PACKRFUI) {
+                    completionHandler()
+                }
+            }
+        }
+    }
+
+    func writePage(_ tag: NFCMiFareTag, page: UInt8, data: Data, completionHandler: @escaping () -> Void) {
+        print("Write page \(page) \(data.hexDescription)")
+        let write = addChecksum(Data([MifareCommands.WRITE.rawValue, page]) + data)
+        tag.sendMiFareCommand(commandPacket: write) { (_, error) in
+            if ((error) != nil) {
+                print("Error during write: \(error as Any)")
+                return
+            }
+            DispatchQueue.main.async {
+                self.lastPageWritten = page
+            }
+            completionHandler()
+        }
     }
 
     func writeUserPages(_ tag: NFCMiFareTag, startPage: UInt8, data: Data, completionHandler: @escaping () -> Void) {
@@ -186,14 +211,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         }
 
         let page = data.subdata(in: Int(startPage) * 4 ..< Int(startPage) * 4 + 4)
-
-        print("Write page \(startPage) \(page.hexDescription)")
-        let write = addChecksum(Data([MifareCommands.WRITE.rawValue, startPage]) + page)
-        tag.sendMiFareCommand(commandPacket: write) { (data, error) in
-            if ((error) != nil) {
-                print("Error during write: \(error as Any)")
-                return
-            }
+        writePage(tag, page: startPage, data: page) {
             self.writeUserPages(tag, startPage: startPage+1, data: data) { () in
                 completionHandler()
             }
@@ -239,7 +257,6 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     }
 
     func calculatePWD(_ uid: Data) -> Data {
-        print(uid.hexDescription)
         var PWD = Data(count: 4)
         PWD[0] = uid[1] ^ uid[3] ^ 0xAA
         PWD[1] = uid[2] ^ uid[4] ^ 0x55
@@ -247,6 +264,4 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         PWD[3] = uid[4] ^ uid[6] ^ 0x55
         return PWD
     }
-
-
 }
