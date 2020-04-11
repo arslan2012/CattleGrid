@@ -24,6 +24,23 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
 
     func start() {
         print("Hello world")
+
+
+        do {            
+            let count = 1
+            let amiiboKeys = UnsafeMutablePointer<nfc3d_amiibo_keys>.allocate(capacity: count)
+            //pointer.initialize(repeating: 0, count: count)
+            defer {
+              //pointer.deinitialize(count: count)
+              amiiboKeys.deallocate()
+            }
+            let path = Bundle.main.path(forResource: "key_retail", ofType: "bin")
+            print("path = \(path!)")
+            nfc3d_amiibo_load_keys(amiiboKeys, path)
+            print(amiiboKeys.pointee.data)
+        }
+
+
         guard NFCReaderSession.readingAvailable else {
             print("NFCReaderSession.readingAvailable failed")
             return
@@ -93,8 +110,9 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             }
         }
 
-        self.dumpTag(tag) { (contents) in
-            print(contents.hexDescription)
+
+        self.dumpTag(tag) { (dump) in
+            print(dump.hexDescription)
         }
     }
 
