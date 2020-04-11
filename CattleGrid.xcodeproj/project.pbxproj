@@ -17,6 +17,7 @@
 		6DC58623244178F1006DA042 /* Data+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC58622244178F1006DA042 /* Data+Hex.swift */; };
 		6DD45BC024423FC100C5C925 /* amiitool in Frameworks */ = {isa = PBXBuildFile; productRef = 6DD45BBF24423FC100C5C925 /* amiitool */; };
 		6DD45BC22442463F00C5C925 /* key_retail.bin in Resources */ = {isa = PBXBuildFile; fileRef = 6DD45BC12442463F00C5C925 /* key_retail.bin */; };
+		6DD45BC42442654100C5C925 /* AmiiboImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DD45BC32442654100C5C925 /* AmiiboImage.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,6 +33,7 @@
 		6DC58620244172B2006DA042 /* TagStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagStore.swift; sourceTree = "<group>"; };
 		6DC58622244178F1006DA042 /* Data+Hex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Data+Hex.swift"; sourceTree = "<group>"; };
 		6DD45BC12442463F00C5C925 /* key_retail.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = key_retail.bin; sourceTree = "<group>"; };
+		6DD45BC32442654100C5C925 /* AmiiboImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmiiboImage.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -70,6 +72,7 @@
 				6DC5860B24417199006DA042 /* AppDelegate.swift */,
 				6DC5860D24417199006DA042 /* SceneDelegate.swift */,
 				6DC5860F24417199006DA042 /* ContentView.swift */,
+				6DD45BC32442654100C5C925 /* AmiiboImage.swift */,
 				6DC58611244171AB006DA042 /* Assets.xcassets */,
 				6DC58616244171AB006DA042 /* LaunchScreen.storyboard */,
 				6DC58619244171AB006DA042 /* Info.plist */,
@@ -170,6 +173,7 @@
 				6DC58623244178F1006DA042 /* Data+Hex.swift in Sources */,
 				6DC5860E24417199006DA042 /* SceneDelegate.swift in Sources */,
 				6DC58621244172B2006DA042 /* TagStore.swift in Sources */,
+				6DD45BC42442654100C5C925 /* AmiiboImage.swift in Sources */,
 				6DC5861024417199006DA042 /* ContentView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

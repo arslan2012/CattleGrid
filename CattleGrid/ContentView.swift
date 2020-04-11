@@ -10,18 +10,27 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var tagStore: TagStore
+
     var body: some View {
         VStack(alignment: .center) {
+            Text("CattleGate").font(.largeTitle)
             //File selector
+            NavigationView {
+                List(tagStore.amiibos) { amiibo in
+                    Text(amiibo.filename).onTapGesture {
+                        self.tagStore.load(amiibo)
+                    }
+                }
+            }
             //button to say 'go'
-            Text("Hello, World!")
-            Button(action: self.tagStore.start) {
+            Button(action: self.tagStore.scan) {
                  Image(systemName: "square.and.pencil")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
             }
         }
-        .padding()        
+        .padding()
+        .onAppear(perform: self.tagStore.start)
     }
 }
 

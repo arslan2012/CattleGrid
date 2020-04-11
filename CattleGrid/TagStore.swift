@@ -17,13 +17,70 @@ enum MifareCommands : UInt8 {
     case PWD_AUTH = 0x1B
 }
 
+let NTAG215_SIZE = 540
+let NFC3D_AMIIBO_SIZE = 520
+
 let PACK = Data([0x80, 0x80])
 
 class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     static let shared = TagStore()
+    @Published private(set) var amiibos: [AmiiboImage] = []
+    var amiiboKeys : UnsafeMutablePointer<nfc3d_amiibo_keys> = UnsafeMutablePointer<nfc3d_amiibo_keys>.allocate(capacity: 1)
 
     func start() {
-        print("Hello world")
+        print("Start")
+        let fm = FileManager.default
+
+        do {
+            let items = try fm.contentsOfDirectory(at: getDocumentsDirectory(), includingPropertiesForKeys: [], options: [.skipsHiddenFiles])
+
+            for item in items {
+                print("Found \(item)")
+                amiibos.append(AmiiboImage(item))
+            }
+        } catch {
+            // failed to read directory – bad permissions, perhaps?
+        }
+
+
+        let key_retail = Bundle.main.path(forResource: "key_retail", ofType: "bin")!
+        if (!nfc3d_amiibo_load_keys(amiiboKeys, key_retail)) {
+            print("Could not load keys from \(key_retail)")
+            return
+        }
+        print(amiiboKeys.pointee.data)
+
+
+    }
+
+    func getDocumentsDirectory() -> URL {
+        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        let documentsDirectory = paths[0]
+        return documentsDirectory
+    }
+
+    func load(_ amiibo: AmiiboImage) {
+        do {
+            let tag = try Data(contentsOf: amiibo.path)
+            let output = UnsafeMutablePointer<UInt8>.allocate(capacity: NFC3D_AMIIBO_SIZE)
+
+            let unsafeDump : UnsafePointer<UInt8> = tag.withUnsafeBytes { bytes in
+                return bytes
+            }
+
+            if (!nfc3d_amiibo_unpack(amiiboKeys, unsafeDump, output)) {
+                print("!!! WARNING !!!: Tag signature was NOT valid")
+            }
+
+            let plain = Data(bytes: output, count: tag.count)
+            print("Unpacked: \(plain.hexDescription)")
+        } catch {
+            print("Couldn't read file \(amiibo.path)")
+        }
+    }
+
+    func scan() {
+        print("Scan")
 
         guard NFCReaderSession.readingAvailable else {
             print("NFCReaderSession.readingAvailable failed")
@@ -97,32 +154,6 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
 
         self.dumpTag(tag) { (dump) in
             print(dump.hexDescription)
-
-            do {
-                let path = Bundle.main.path(forResource: "key_retail", ofType: "bin")!
-                let amiiboKeys = UnsafeMutablePointer<nfc3d_amiibo_keys>.allocate(capacity: 1)
-                defer {
-                  amiiboKeys.deallocate()
-                }
-
-                if (!nfc3d_amiibo_load_keys(amiiboKeys, path)) {
-                    print("Could not load keys from \(path)")
-                    return
-                }
-                print(amiiboKeys.pointee.data)
-                let output = UnsafeMutablePointer<UInt8>.allocate(capacity: dump.count)
-
-                let unsafeDump : UnsafePointer<UInt8> = dump.withUnsafeBytes { bytes in
-                    return bytes
-                }
-                nfc3d_amiibo_unpack(amiiboKeys, unsafeDump, output)
-                let plain = Data(bytes: output, count: dump.count)
-                print("Unpacked: \(plain.hexDescription)")
-
-                //nfc3d_amiibo_unpack(<#T##amiiboKeys: UnsafePointer<nfc3d_amiibo_keys>!##UnsafePointer<nfc3d_amiibo_keys>!#>, <#T##tag: UnsafePointer<UInt8>!##UnsafePointer<UInt8>!#>, <#T##plain: UnsafeMutablePointer<UInt8>!##UnsafeMutablePointer<UInt8>!#>)
-
-            }
-
         }
     }
 
