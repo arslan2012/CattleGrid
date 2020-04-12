@@ -28,7 +28,7 @@ struct ContentView: View {
                     Text(amiibo.filename).onTapGesture {
                         self.tagStore.load(amiibo)
                     }
-                    .foregroundColor((amiibo.path == self.tagStore.selected?.path) ? .blue : .black)
+                    .foregroundColor((amiibo.path == self.tagStore.selected?.path) ? .primary : .secondary)
                 }
             }
             //button to say 'go'
