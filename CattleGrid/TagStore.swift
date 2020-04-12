@@ -59,8 +59,8 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
 
         do {
             let items = try fm.contentsOfDirectory(at: getDocumentsDirectory(), includingPropertiesForKeys: [], options: [.skipsHiddenFiles, .skipsPackageDescendants, .skipsSubdirectoryDescendants])
-
-            for item in items {
+            let sortedItems = items.sorted(by: { $0.lastPathComponent < $1.lastPathComponent})
+            for item in sortedItems {
                 //print("Found \(item)")
                 if (item.lastPathComponent == KEY_RETAIL) {
                     continue
