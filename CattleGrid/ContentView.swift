@@ -13,7 +13,7 @@ struct ContentView: View {
 
     var body: some View {
         VStack(alignment: .center) {
-            Text("CattleGate").font(.largeTitle)
+            Text("CattleGrid").font(.largeTitle)
             if self.tagStore.lastPageWritten > 0 {
                 HStack() {
                     ProgressBar(value: tagStore.progress).frame(height: 20)
