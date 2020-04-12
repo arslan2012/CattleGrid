@@ -15,7 +15,10 @@ struct ContentView: View {
         VStack(alignment: .center) {
             Text("CattleGate").font(.largeTitle)
             if self.tagStore.lastPageWritten > 0 {
-                Text(String(format: "%.2f%", progress())).font(.subheadline)
+                HStack() {
+                    ProgressBar(value: tagStore.progress).frame(height: 20)
+                    Text(String(format: "%.2f%", tagStore.progress * 100)).font(.subheadline)
+                }
             }
             if self.tagStore.error != "" {
                 Text(self.tagStore.error)
@@ -44,14 +47,29 @@ struct ContentView: View {
         .padding()
         .onAppear(perform: self.tagStore.start)
     }
-
-    func progress() -> Float {
-        return Float(tagStore.lastPageWritten) / Float(NTAG215Pages.total.rawValue) * 100
-    }
 }
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView().environmentObject(TagStore.shared)
+    }
+}
+
+// https://www.simpleswiftguide.com/how-to-build-linear-progress-bar-in-swiftui/
+struct ProgressBar: View {
+    let value: Float
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                Rectangle().frame(width: geometry.size.width , height: geometry.size.height)
+                    .opacity(0.3)
+                    .foregroundColor(Color(UIColor.systemTeal))
+
+                Rectangle().frame(width: min(CGFloat(self.value)*geometry.size.width, geometry.size.width), height: geometry.size.height)
+                    .foregroundColor(Color(UIColor.systemBlue))
+                    .animation(.linear)
+            }.cornerRadius(45.0)
+        }
     }
 }

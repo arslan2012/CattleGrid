@@ -41,8 +41,14 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     static let shared = TagStore()
     @Published private(set) var amiibos: [AmiiboImage] = []
     @Published private(set) var selected: AmiiboImage?
-    @Published private(set) var lastPageWritten : UInt8 = 0
+    @Published private(set) var progress : Float = 0
     @Published private(set) var error : String = ""
+
+    var lastPageWritten : UInt8 = 0 {
+        willSet(newVal) {
+            self.progress = Float(newVal) / Float(NTAG215Pages.total.rawValue)
+        }
+    }
 
     var amiitool : Amiitool?
     var plain : Data = Data()
