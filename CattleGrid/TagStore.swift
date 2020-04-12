@@ -18,7 +18,6 @@ enum MifareCommands : UInt8 {
 }
 
 let NTAG215_SIZE = 540
-let NFC3D_AMIIBO_SIZE = 520
 
 enum NTAG215Pages : UInt8 {
     case capabilityContainer = 3
@@ -32,6 +31,7 @@ enum NTAG215Pages : UInt8 {
 }
 
 let PACKRFUI = Data([0x80, 0x80, 0x00, 0x00])
+let CC = Data([0xf1, 0x10, 0xff, 0xee])
 
 class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     static let shared = TagStore()
@@ -76,10 +76,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         do {
             let tag = try Data(contentsOf: amiibo.path)
             let output = UnsafeMutablePointer<UInt8>.allocate(capacity: NTAG215_SIZE)
-
-            let unsafeDump : UnsafePointer<UInt8> = tag.withUnsafeBytes { bytes in
-                return bytes
-            }
+            let unsafeDump = tag.unsafeBytes
 
             if (!nfc3d_amiibo_unpack(amiiboKeys, unsafeDump, output)) {
                 print("!!! WARNING !!!: Tag signature was NOT valid")
@@ -131,35 +128,27 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
                     return
                 }
 
-                self.connected(tag)
+                self.connected(tag, session: session)
             }
         } else {
             print("Ignoring non-mifare tag")
         }
     }
 
-    func connected(_ tag: NFCMiFareTag) {
+    func connected(_ tag: NFCMiFareTag, session: NFCTagReaderSession) {
         let read = Data([MifareCommands.READ.rawValue, 0])
         tag.sendMiFareCommand(commandPacket: read) { (data, error) in
             if ((error) != nil) {
                 print(error as Any)
+                session.invalidate()
                 return
             }
-
-            // let uid = data.subdata(in: 0..<7)
-            //TODO: valudate CC is correct for blank tag.
-            //let cc = data.subdata(in: 12..<16) // amiibo: f1 10 ff ee
-            //print("cc = \(cc.hexDescription)")
-
 
             //Amiitool plain text stores first 2 pages (uid) towards the end
             self.plain.replaceSubrange(468..<476, with: data.subdata(in: 0..<8))
 
             let newImage = UnsafeMutablePointer<UInt8>.allocate(capacity: NTAG215_SIZE)
-
-            let unsafePlain : UnsafePointer<UInt8> = self.plain.withUnsafeBytes { bytes in
-                return bytes
-            }
+            let unsafePlain = self.plain.unsafeBytes
 
             nfc3d_amiibo_pack(self.amiiboKeys, unsafePlain, newImage)
 
@@ -171,8 +160,8 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
                 DispatchQueue.main.async {
                     self.lastPageWritten = 0
                 }
+                session.invalidate()
             }
-
         }
     }
 
@@ -183,7 +172,10 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             print("\(tag.identifier.hexDescription): \(pwd.hexDescription)")
             self.writePage(tag, page: NTAG215Pages.pwd.rawValue, data: pwd) {
                 self.writePage(tag, page: NTAG215Pages.pack.rawValue, data: PACKRFUI) {
-                    completionHandler()
+                    self.writePage(tag, page: NTAG215Pages.capabilityContainer.rawValue, data: CC) {
+                        completionHandler()
+                    }
+
                 }
             }
         }

@@ -30,7 +30,7 @@ struct ContentView: View {
                 .aspectRatio(contentMode: .fit)
                 .disabled(self.tagStore.selected == nil)
             }
-
+            .disabled(self.tagStore.selected == nil)
         }
         .padding()
         .onAppear(perform: self.tagStore.start)
