@@ -28,11 +28,11 @@ struct ContentView: View {
             //File selector
             NavigationView {
                 if (tagStore.amiibos.count > 0) {
-                    List(tagStore.amiibos) { amiibo in
-                        Text(amiibo.filename).onTapGesture {
+                    List(tagStore.amiibos, id:\.path) { amiibo in
+                        Text(amiibo.lastPathComponent).onTapGesture {
                             self.tagStore.load(amiibo)
                         }
-                        .foregroundColor((amiibo.path == self.tagStore.selected?.path) ? .primary : .secondary)
+                        .foregroundColor((amiibo.lastPathComponent == self.tagStore.selected?.lastPathComponent) ? .primary : .secondary)
                     }
                     .hiddenNavigationBarStyle()
                 } else {

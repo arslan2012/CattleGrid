@@ -39,8 +39,8 @@ let PACKRFUI = Data([0x80, 0x80, 0x00, 0x00])
 
 class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     static let shared = TagStore()
-    @Published private(set) var amiibos: [AmiiboImage] = []
-    @Published private(set) var selected: AmiiboImage?
+    @Published private(set) var amiibos: [URL] = []
+    @Published private(set) var selected: URL?
     @Published private(set) var progress : Float = 0
     @Published private(set) var error : String = ""
 
@@ -65,7 +65,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
                 if (item.lastPathComponent == KEY_RETAIL) {
                     continue
                 }
-                amiibos.append(AmiiboImage(item))
+                amiibos.append(item)
             }
         } catch {
             // failed to read directory – bad permissions, perhaps?
@@ -86,19 +86,19 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         return documentsDirectory
     }
 
-    func load(_ amiibo: AmiiboImage) {
+    func load(_ amiiboPath: URL) {
         do {
-            let tag = try Data(contentsOf: amiibo.path)
+            let tag = try Data(contentsOf: amiiboPath)
             guard let amiitool = self.amiitool else {
                 self.error = "Internal error: amiitool not initialized"
                 return
             }
             plain = amiitool.unpack(tag)
-            print("\(amiibo.filename) loaded")
-            self.selected = amiibo
+            print("\(amiiboPath.lastPathComponent) loaded")
+            self.selected = amiiboPath
             // print("Unpacked: \(plain.hexDescription)")
         } catch {
-            print("Couldn't read \(amiibo.filename)")
+            print("Couldn't read \(amiiboPath)")
         }
     }
 
