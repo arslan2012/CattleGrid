@@ -24,6 +24,7 @@ enum NTAG215Pages : UInt8 {
     case capabilityContainer = 3
     case userMemoryFirst = 4
     case userMemoryLast = 129
+    case dynamicLockBits = 130
     case cfg0 = 131
     case cfg1 = 132
     case pwd = 133
@@ -31,8 +32,11 @@ enum NTAG215Pages : UInt8 {
     case total = 135
 }
 
-let PACKRFUI = Data([0x80, 0x80, 0x00, 0x00])
 let CC = Data([0xf1, 0x10, 0xff, 0xee])
+let DLB = Data([0x01, 0x00, 0x0f, 0xbd])
+let CFG0 = Data([0x00, 0x00, 0x00, 0x04])
+let CFG1 = Data([0x5f, 0x00, 0x00, 0x00])
+let PACKRFUI = Data([0x80, 0x80, 0x00, 0x00])
 
 class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     static let shared = TagStore()
@@ -192,7 +196,13 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             self.writePage(tag, page: NTAG215Pages.pwd.rawValue, data: pwd) {
                 self.writePage(tag, page: NTAG215Pages.pack.rawValue, data: PACKRFUI) {
                     self.writePage(tag, page: NTAG215Pages.capabilityContainer.rawValue, data: CC) {
-                        completionHandler()
+                        self.writePage(tag, page: NTAG215Pages.cfg0.rawValue, data: CFG0) {
+                            self.writePage(tag, page: NTAG215Pages.cfg1.rawValue, data: CFG1) {
+                                self.writePage(tag, page: NTAG215Pages.dynamicLockBits.rawValue, data: DLB) {
+                                    completionHandler()
+                                }
+                            }
+                        }
                     }
                 }
             }
