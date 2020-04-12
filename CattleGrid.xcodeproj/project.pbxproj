@@ -16,7 +16,6 @@
 		6DC58621244172B2006DA042 /* TagStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC58620244172B2006DA042 /* TagStore.swift */; };
 		6DC58623244178F1006DA042 /* Data+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC58622244178F1006DA042 /* Data+Hex.swift */; };
 		6DD45BC024423FC100C5C925 /* amiitool in Frameworks */ = {isa = PBXBuildFile; productRef = 6DD45BBF24423FC100C5C925 /* amiitool */; };
-		6DD45BC22442463F00C5C925 /* key_retail.bin in Resources */ = {isa = PBXBuildFile; fileRef = 6DD45BC12442463F00C5C925 /* key_retail.bin */; };
 		6DD45BC42442654100C5C925 /* AmiiboImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DD45BC32442654100C5C925 /* AmiiboImage.swift */; };
 /* End PBXBuildFile section */
 
@@ -32,7 +31,6 @@
 		6DC5861F2441721B006DA042 /* CattleGrid.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CattleGrid.entitlements; sourceTree = "<group>"; };
 		6DC58620244172B2006DA042 /* TagStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagStore.swift; sourceTree = "<group>"; };
 		6DC58622244178F1006DA042 /* Data+Hex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Data+Hex.swift"; sourceTree = "<group>"; };
-		6DD45BC12442463F00C5C925 /* key_retail.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = key_retail.bin; sourceTree = "<group>"; };
 		6DD45BC32442654100C5C925 /* AmiiboImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmiiboImage.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -76,7 +74,6 @@
 				6DC58616244171AB006DA042 /* LaunchScreen.storyboard */,
 				6DC58619244171AB006DA042 /* Info.plist */,
 				6DC58613244171AB006DA042 /* Preview Content */,
-				6DD45BC12442463F00C5C925 /* key_retail.bin */,
 				6DD45BC32442654100C5C925 /* AmiiboImage.swift */,
 				6DC58620244172B2006DA042 /* TagStore.swift */,
 			);
@@ -157,7 +154,6 @@
 			files = (
 				6DC58618244171AB006DA042 /* LaunchScreen.storyboard in Resources */,
 				6DC58615244171AB006DA042 /* Preview Assets.xcassets in Resources */,
-				6DD45BC22442463F00C5C925 /* key_retail.bin in Resources */,
 				6DC58612244171AB006DA042 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

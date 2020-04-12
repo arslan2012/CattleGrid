@@ -18,6 +18,7 @@ enum MifareCommands : UInt8 {
 }
 
 let NTAG215_SIZE = 540
+let KEY_RETAIL = "key_retail.bin"
 
 enum NTAG215Pages : UInt8 {
     case capabilityContainer = 3
@@ -48,20 +49,28 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         let fm = FileManager.default
 
         do {
-            let items = try fm.contentsOfDirectory(at: getDocumentsDirectory(), includingPropertiesForKeys: [], options: [.skipsHiddenFiles])
+            let items = try fm.contentsOfDirectory(at: getDocumentsDirectory(), includingPropertiesForKeys: [], options: [.skipsHiddenFiles, .skipsPackageDescendants, .skipsSubdirectoryDescendants])
 
             for item in items {
                 //print("Found \(item)")
+                if (item.lastPathComponent == KEY_RETAIL) {
+                    continue
+                }
                 amiibos.append(AmiiboImage(item))
             }
         } catch {
             // failed to read directory – bad permissions, perhaps?
         }
 
+        let key_retail = getDocumentsDirectory().appendingPathComponent(KEY_RETAIL).path
+        if (!fm.fileExists(atPath: key_retail)) {
+            self.error = "\(KEY_RETAIL) missing"
+            return
+        }
 
-        let key_retail = Bundle.main.path(forResource: "key_retail", ofType: "bin")!
         if (!nfc3d_amiibo_load_keys(amiiboKeys, key_retail)) {
             print("Could not load keys from \(key_retail)")
+            self.error = "Could not load keys"
             return
         }
         //print(amiiboKeys.pointee.data)

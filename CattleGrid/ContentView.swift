@@ -37,6 +37,7 @@ struct ContentView: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .disabled(self.tagStore.selected == nil)
+                .padding()
             }
             .disabled(self.tagStore.selected == nil)
         }
