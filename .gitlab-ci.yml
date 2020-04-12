@@ -1,0 +1,7 @@
+pages:
+  script:
+  - date
+  artifacts:
+    paths:
+    - public
+
