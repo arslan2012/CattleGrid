@@ -27,20 +27,25 @@ struct ContentView: View {
             }
             //File selector
             NavigationView {
-                List(tagStore.amiibos) { amiibo in
-                    Text(amiibo.filename).onTapGesture {
-                        self.tagStore.load(amiibo)
+                if (tagStore.amiibos.count > 0) {
+                    List(tagStore.amiibos) { amiibo in
+                        Text(amiibo.filename).onTapGesture {
+                            self.tagStore.load(amiibo)
+                        }
+                        .foregroundColor((amiibo.path == self.tagStore.selected?.path) ? .primary : .secondary)
                     }
-                    .foregroundColor((amiibo.path == self.tagStore.selected?.path) ? .primary : .secondary)
+                    .hiddenNavigationBarStyle()
+                } else {
+                    Text("No figures.").font(.headline)
+                    Text("https://support.apple.com/en-us/HT201301").font(.subheadline)
                 }
             }
             //button to say 'go'
             Button(action: self.tagStore.scan) {
-                 Image(systemName: "square.and.pencil")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .disabled(self.tagStore.selected == nil)
-                .padding()
+                Image(systemName: "square.and.pencil")
+                    .font(.largeTitle)
+                    .disabled(self.tagStore.selected == nil)
+                    .padding()
             }
             .disabled(self.tagStore.selected == nil)
         }
