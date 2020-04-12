@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CattleGrid.ipa</key>
+	<array>
+		<dict>
+			<key>architectures</key>
+			<array>
+				<string>arm64</string>
+			</array>
+			<key>certificate</key>
+			<dict>
+				<key>SHA1</key>
+				<string>820A6369D9EA2300AEA727E2FD5E4AE3A07E44DA</string>
+				<key>dateExpires</key>
+				<string>4/12/21</string>
+				<key>type</key>
+				<string>Apple Distribution</string>
+			</dict>
+			<key>entitlements</key>
+			<dict>
+				<key>application-identifier</key>
+				<string>H9NLRYZLBM.org.ericbetts.CattleGrid</string>
+				<key>com.apple.developer.nfc.readersession.formats</key>
+				<array>
+					<string>NDEF</string>
+					<string>TAG</string>
+				</array>
+				<key>com.apple.developer.team-identifier</key>
+				<string>H9NLRYZLBM</string>
+				<key>get-task-allow</key>
+				<false/>
+			</dict>
+			<key>name</key>
+			<string>CattleGrid.app</string>
+			<key>profile</key>
+			<dict>
+				<key>UUID</key>
+				<string>be2b0090-abee-4deb-86d3-c795bec771c9</string>
+				<key>name</key>
+				<string>iOS Team Ad Hoc Provisioning Profile: org.ericbetts.CattleGrid</string>
+			</dict>
+			<key>team</key>
+			<dict>
+				<key>id</key>
+				<string>H9NLRYZLBM</string>
+				<key>name</key>
+				<string>Eric Betts</string>
+			</dict>
+		</dict>
+	</array>
+</dict>
+</plist>

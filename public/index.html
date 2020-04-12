@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <meta name="theme-color" content="#000000" />
     <title>CattleGrid</title>
     <meta
       name="description"
@@ -11,9 +14,19 @@
     />
     <meta name="author" content="Eric Betts" />
     <link rel="stylesheet" href="css/styles.css?v=1.0" />
+    <script src="js/plist-parse.js"></script>
+    <script src="js/index.js"></script>
   </head>
 
   <body>
-    <script src="js/scripts.js"></script>
+    <noscript>
+      You need to enable JavaScript to pasrse the latest-mac.yml.
+    </noscript>
+    <div id="root">
+      <h2><a id="latest"></a></h2>
+      <a id="appURL">
+        <img id="displayImage" alt="App's Display Image" />
+      </a>
+    </div>
   </body>
 </html>
