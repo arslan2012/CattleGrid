@@ -17,7 +17,8 @@ struct ContentView: View {
             if self.tagStore.lastPageWritten > 0 {
                 HStack() {
                     ProgressBar(value: tagStore.progress).frame(height: 20)
-                    Text(String(format: "%.2f%", tagStore.progress * 100)).font(.subheadline)
+                    Text("\(tagStore.progress * 100, specifier: "%.2f")%")
+                        .font(.subheadline)
                 }
             }
             if self.tagStore.error != "" {
@@ -32,7 +33,7 @@ struct ContentView: View {
                         Text(amiibo.lastPathComponent).onTapGesture {
                             self.tagStore.load(amiibo)
                         }
-                        .foregroundColor((amiibo.lastPathComponent == self.tagStore.selected?.lastPathComponent) ? .primary : .secondary)
+                        .foregroundColor(self.selected(amiibo) ? .primary : .secondary)
                     }
                     .hiddenNavigationBarStyle()
                 } else {
@@ -40,6 +41,12 @@ struct ContentView: View {
                     Text("https://support.apple.com/en-us/HT201301").font(.subheadline)
                 }
             }
+            .onAppear(perform: self.tagStore.start)
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color.accentColor, lineWidth: 0.3)
+            )
+            //.border(Color.accentColor, width: 0.3)
             //button to say 'go'
             Button(action: self.tagStore.scan) {
                 Image(systemName: "square.and.pencil")
@@ -48,9 +55,14 @@ struct ContentView: View {
                     .padding()
             }
             .disabled(self.tagStore.selected == nil)
+            Text("© Eric Betts 2020")
+                .font(.footnote)
         }
         .padding()
-        .onAppear(perform: self.tagStore.start)
+    }
+
+    func selected(_ amiibo: URL) -> Bool {
+        return (amiibo.lastPathComponent == self.tagStore.selected?.lastPathComponent)
     }
 }
 
