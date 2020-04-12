@@ -132,15 +132,19 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         if case let NFCTag.miFare(tag) = tags.first! {
             guard tag.mifareFamily == .ultralight else {
                 print("Ignoring non-ultralight \(tag.mifareFamily.rawValue)")
-                self.error = "Ignoring non-ultralight"
+                DispatchQueue.main.async {
+                    self.error = "Ignoring non-ultralight"
+                }
                 return
             }
 
             session.connect(to: tags.first!) { (error: Error?) in
                 if ((error) != nil) {
                     print("Error during connect: \(error!.localizedDescription)")
-                    self.error = "Error during connect: \(error!.localizedDescription)"
-                    self.lastPageWritten = 0
+                    DispatchQueue.main.async {
+                        self.error = "Error during connect: \(error!.localizedDescription)"
+                        self.lastPageWritten = 0
+                    }
                     return
                 }
 
@@ -148,7 +152,9 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             }
         } else {
             print("Ignoring non-mifare tag")
-            self.error = "Ignoring non-mifare tag"
+            DispatchQueue.main.async {
+                self.error = "Ignoring non-mifare tag"
+            }
         }
     }
 
@@ -157,14 +163,18 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         tag.sendMiFareCommand(commandPacket: read) { (data, error) in
             if ((error) != nil) {
                 print("Error during read: \(error!.localizedDescription)")
-                self.error = "Error during read: \(error!.localizedDescription)"
-                self.lastPageWritten = 0
+                DispatchQueue.main.async {
+                    self.error = "Error during read: \(error!.localizedDescription)"
+                    self.lastPageWritten = 0
+                }
                 session.invalidate()
                 return
             }
 
             guard let amiitool = self.amiitool else {
-                self.error = "Internal error: amiitool not initialized"
+                DispatchQueue.main.async {
+                    self.error = "Internal error: amiitool not initialized"
+                }
                 return
             }
 
