@@ -38,6 +38,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     @Published private(set) var amiibos: [AmiiboImage] = []
     @Published private(set) var selected: AmiiboImage?
     @Published private(set) var lastPageWritten : UInt8 = 0
+    @Published private(set) var error : String = ""
 
     var amiiboKeys : UnsafeMutablePointer<nfc3d_amiibo_keys> = UnsafeMutablePointer<nfc3d_amiibo_keys>.allocate(capacity: 1)
     var plain : Data = Data()
@@ -93,9 +94,11 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
 
     func scan() {
         print("Scan")
+        self.error = ""
 
         guard NFCReaderSession.readingAvailable else {
             print("NFCReaderSession.readingAvailable failed")
+            self.error = "NFCReaderSession.readingAvailable failed"
             return
         }
 
@@ -119,12 +122,15 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         if case let NFCTag.miFare(tag) = tags.first! {
             guard tag.mifareFamily == .ultralight else {
                 print("Ignoring non-ultralight \(tag.mifareFamily.rawValue)")
+                self.error = "Ignoring non-ultralight"
                 return
             }
 
             session.connect(to: tags.first!) { (error: Error?) in
                 if ((error) != nil) {
-                    print(error as Any)
+                    print("Error during connect: \(error!.localizedDescription)")
+                    self.error = "Error during connect: \(error!.localizedDescription)"
+                    self.lastPageWritten = 0
                     return
                 }
 
@@ -132,6 +138,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             }
         } else {
             print("Ignoring non-mifare tag")
+            self.error = "Ignoring non-mifare tag"
         }
     }
 
@@ -139,7 +146,9 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         let read = Data([MifareCommands.READ.rawValue, 0])
         tag.sendMiFareCommand(commandPacket: read) { (data, error) in
             if ((error) != nil) {
-                print(error as Any)
+                print("Error during read: \(error!.localizedDescription)")
+                self.error = "Error during read: \(error!.localizedDescription)"
+                self.lastPageWritten = 0
                 session.invalidate()
                 return
             }
@@ -159,6 +168,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
                 print("done writing")
                 DispatchQueue.main.async {
                     self.lastPageWritten = 0
+                    self.error = ""
                 }
                 session.invalidate()
             }
@@ -175,7 +185,6 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
                     self.writePage(tag, page: NTAG215Pages.capabilityContainer.rawValue, data: CC) {
                         completionHandler()
                     }
-
                 }
             }
         }
@@ -186,7 +195,11 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         let write = addChecksum(Data([MifareCommands.WRITE.rawValue, page]) + data)
         tag.sendMiFareCommand(commandPacket: write) { (_, error) in
             if ((error) != nil) {
-                print("Error during write: \(error as Any)")
+                print("Error during write: \(error!.localizedDescription)")
+                DispatchQueue.main.async {
+                    self.error = "Error during write: \(error!.localizedDescription)"
+                    self.lastPageWritten = 0
+                }
                 return
             }
             DispatchQueue.main.async {

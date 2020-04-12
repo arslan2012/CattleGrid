@@ -14,13 +14,21 @@ struct ContentView: View {
     var body: some View {
         VStack(alignment: .center) {
             Text("CattleGate").font(.largeTitle)
-            Text("\(progress())%").font(.subheadline)
+            if self.tagStore.lastPageWritten > 0 {
+                Text(String(format: "%.2f%", progress())).font(.subheadline)
+            }
+            if self.tagStore.error != "" {
+                Text(self.tagStore.error)
+                    .font(.subheadline)
+                    .foregroundColor(.red)
+            }
             //File selector
             NavigationView {
                 List(tagStore.amiibos) { amiibo in
                     Text(amiibo.filename).onTapGesture {
                         self.tagStore.load(amiibo)
                     }
+                    .foregroundColor((amiibo.path == self.tagStore.selected?.path) ? .blue : .black)
                 }
             }
             //button to say 'go'
