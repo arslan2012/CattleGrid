@@ -17,7 +17,6 @@ enum MifareCommands : UInt8 {
     case PWD_AUTH = 0x1B
 }
 
-let NTAG215_SIZE = 540
 let KEY_RETAIL = "key_retail.bin"
 
 enum NTAG215Pages : UInt8 {
@@ -45,7 +44,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     @Published private(set) var lastPageWritten : UInt8 = 0
     @Published private(set) var error : String = ""
 
-    var amiiboKeys : UnsafeMutablePointer<nfc3d_amiibo_keys> = UnsafeMutablePointer<nfc3d_amiibo_keys>.allocate(capacity: 1)
+    var amiitool : Amiitool?
     var plain : Data = Data()
 
     func start() {
@@ -72,12 +71,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             return
         }
 
-        if (!nfc3d_amiibo_load_keys(amiiboKeys, key_retail)) {
-            print("Could not load keys from \(key_retail)")
-            self.error = "Could not load keys"
-            return
-        }
-        //print(amiiboKeys.pointee.data)
+        self.amiitool = Amiitool(path: key_retail)
     }
 
     func getDocumentsDirectory() -> URL {
@@ -89,19 +83,16 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     func load(_ amiibo: AmiiboImage) {
         do {
             let tag = try Data(contentsOf: amiibo.path)
-            let output = UnsafeMutablePointer<UInt8>.allocate(capacity: NTAG215_SIZE)
-            let unsafeDump = tag.unsafeBytes
-
-            if (!nfc3d_amiibo_unpack(amiiboKeys, unsafeDump, output)) {
-                print("!!! WARNING !!!: Tag signature was NOT valid")
+            guard let amiitool = self.amiitool else {
+                self.error = "Internal error: amiitool not initialized"
+                return
             }
-
-            plain = Data(bytes: output, count: tag.count)
-            print("\(amiibo.filename) selected")
+            plain = amiitool.unpack(tag)
+            print("\(amiibo.filename) loaded")
             self.selected = amiibo
             // print("Unpacked: \(plain.hexDescription)")
         } catch {
-            print("Couldn't read file \(amiibo.path)")
+            print("Couldn't read \(amiibo.filename)")
         }
     }
 
@@ -166,18 +157,16 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
                 return
             }
 
+            guard let amiitool = self.amiitool else {
+                self.error = "Internal error: amiitool not initialized"
+                return
+            }
+
             //Amiitool plain text stores first 2 pages (uid) towards the end
             self.plain.replaceSubrange(468..<476, with: data.subdata(in: 0..<8))
+            let modified = amiitool.pack(self.plain)
 
-            let newImage = UnsafeMutablePointer<UInt8>.allocate(capacity: NTAG215_SIZE)
-            let unsafePlain = self.plain.unsafeBytes
-
-            nfc3d_amiibo_pack(self.amiiboKeys, unsafePlain, newImage)
-
-            let new = Data(bytes: newImage, count: NTAG215_SIZE)
-            //print(new.hexDescription)
-
-            self.writeTag(tag, newImage: new) { () in
+            self.writeTag(tag, newImage: modified) { () in
                 print("done writing")
                 DispatchQueue.main.async {
                     self.lastPageWritten = 0

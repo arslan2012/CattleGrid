@@ -13,13 +13,6 @@ extension Data {
         return reduce("") {$0 + String(format: "%02x", $1)}
     }
 
-    var unsafeBytes : UnsafePointer<UInt8> {
-        return self.withUnsafeBytes { bytes in
-            return bytes
-        }
-    }
-
-
     init(hex: String) {
         let hexArray = hex.trimmingCharacters(in: NSCharacterSet.whitespaces).components(separatedBy: " ")
         let hexBytes : [UInt8] = hexArray.map({UInt8($0, radix: 0x10)!})
