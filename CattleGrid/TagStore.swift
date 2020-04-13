@@ -50,16 +50,30 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         }
     }
 
+    let fm = FileManager.default
+
     var amiitool : Amiitool?
     var plain : Data = Data()
 
     func start() {
         print("Start")
-        let fm = FileManager.default
 
+        let key_retail = getDocumentsDirectory().appendingPathComponent(KEY_RETAIL).path
+            if (!fm.fileExists(atPath: key_retail)) {
+                self.error = "\(KEY_RETAIL) missing"
+                return
+            }
+
+        self.amiitool = Amiitool(path: key_retail)
+
+        self.loadList()
+    }
+
+    func loadList() {
         do {
             let items = try fm.contentsOfDirectory(at: getDocumentsDirectory(), includingPropertiesForKeys: [], options: [.skipsHiddenFiles, .skipsPackageDescendants, .skipsSubdirectoryDescendants])
             let sortedItems = items.sorted(by: { $0.lastPathComponent < $1.lastPathComponent})
+            amiibos = []
             for item in sortedItems {
                 //print("Found \(item)")
                 if (item.lastPathComponent == KEY_RETAIL) {
@@ -70,14 +84,6 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         } catch {
             // failed to read directory – bad permissions, perhaps?
         }
-
-        let key_retail = getDocumentsDirectory().appendingPathComponent(KEY_RETAIL).path
-        if (!fm.fileExists(atPath: key_retail)) {
-            self.error = "\(KEY_RETAIL) missing"
-            return
-        }
-
-        self.amiitool = Amiitool(path: key_retail)
     }
 
     func getDocumentsDirectory() -> URL {
