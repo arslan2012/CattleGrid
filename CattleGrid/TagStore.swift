@@ -102,7 +102,9 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             plain = amiitool.unpack(tag)
             print("\(amiiboPath.lastPathComponent) loaded")
             self.selected = amiiboPath
-            // print("Unpacked: \(plain.hexDescription)")
+            
+            let id = plain.subdata(in: 0x1dc..<0x1e4)
+            print("Unpacked: \(id.hexDescription)")
         } catch {
             print("Couldn't read \(amiiboPath)")
         }

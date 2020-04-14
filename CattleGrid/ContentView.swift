@@ -46,7 +46,7 @@ struct ContentView: View {
                 RoundedRectangle(cornerRadius: 20)
                     .stroke(Color.accentColor, lineWidth: 0.3)
             )
-            //.border(Color.accentColor, width: 0.3)
+
             //button to say 'go'
             Button(action: self.tagStore.scan) {
                 Image(systemName: "square.and.pencil")
@@ -72,21 +72,3 @@ struct ContentView_Previews: PreviewProvider {
     }
 }
 
-// https://www.simpleswiftguide.com/how-to-build-linear-progress-bar-in-swiftui/
-struct ProgressBar: View {
-    let value: Float
-
-    var body: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .leading) {
-                Rectangle().frame(width: geometry.size.width , height: geometry.size.height)
-                    .opacity(0.3)
-                    .foregroundColor(Color(UIColor.systemTeal))
-
-                Rectangle().frame(width: min(CGFloat(self.value)*geometry.size.width, geometry.size.width), height: geometry.size.height)
-                    .foregroundColor(Color(UIColor.systemBlue))
-                    .animation(.linear)
-            }.cornerRadius(45.0)
-        }
-    }
-}
