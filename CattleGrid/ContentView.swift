@@ -49,14 +49,17 @@ struct ContentView: View {
 
             //button to say 'go'
             Button(action: self.tagStore.scan) {
-                Image(systemName: "square.and.pencil")
-                    .font(.largeTitle)
+                Image(systemName: "arrow.down.doc")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width:100, height:100)
                     .disabled(self.tagStore.selected == nil)
                     .padding()
             }
             .disabled(self.tagStore.selected == nil)
             Text("© Eric Betts 2020")
                 .font(.footnote)
+                .fontWeight(.light)
         }
         .padding()
     }
