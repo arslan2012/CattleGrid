@@ -20,6 +20,7 @@ enum MifareCommands : UInt8 {
 let KEY_RETAIL = "key_retail.bin"
 
 enum NTAG215Pages : UInt8 {
+    case staticLockBits = 2
     case capabilityContainer = 3
     case userMemoryFirst = 4
     case userMemoryLast = 129
@@ -31,6 +32,7 @@ enum NTAG215Pages : UInt8 {
     case total = 135
 }
 
+let SLB = Data([0x00, 0x00, 0x0f, 0xe0])
 let CC = Data([0xf1, 0x10, 0xff, 0xee])
 let DLB = Data([0x01, 0x00, 0x0f, 0xbd])
 let CFG0 = Data([0x00, 0x00, 0x00, 0x04])
@@ -187,9 +189,10 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             }
 
             //Amiitool plain text stores first 2 pages (uid) towards the end
+            //TODO: is uid even used in encryption/signing?
             self.plain.replaceSubrange(468..<476, with: data.subdata(in: 0..<8))
-            let modified = amiitool.pack(self.plain)
 
+            let modified = amiitool.pack(self.plain)
             self.writeTag(tag, newImage: modified) { () in
                 print("done writing")
                 DispatchQueue.main.async {
@@ -203,7 +206,6 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
 
     func writeTag(_ tag: NFCMiFareTag, newImage: Data, completionHandler: @escaping () -> Void) {
         self.writeUserPages(tag, startPage: NTAG215Pages.userMemoryFirst.rawValue, data: newImage) { () in
-            //write PWD
             let pwd = self.calculatePWD(tag.identifier)
             print("\(tag.identifier.hexDescription): \(pwd.hexDescription)")
             self.writePage(tag, page: NTAG215Pages.pwd.rawValue, data: pwd) {
@@ -212,32 +214,15 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
                         self.writePage(tag, page: NTAG215Pages.cfg0.rawValue, data: CFG0) {
                             self.writePage(tag, page: NTAG215Pages.cfg1.rawValue, data: CFG1) {
                                 self.writePage(tag, page: NTAG215Pages.dynamicLockBits.rawValue, data: DLB) {
-                                    completionHandler()
+                                    self.writePage(tag, page: NTAG215Pages.staticLockBits.rawValue, data: SLB) {
+                                        completionHandler()
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-        }
-    }
-
-    func writePage(_ tag: NFCMiFareTag, page: UInt8, data: Data, completionHandler: @escaping () -> Void) {
-        print("Write page \(page) \(data.hexDescription)")
-        let write = addChecksum(Data([MifareCommands.WRITE.rawValue, page]) + data)
-        tag.sendMiFareCommand(commandPacket: write) { (_, error) in
-            if ((error) != nil) {
-                print("Error during write: \(error!.localizedDescription)")
-                DispatchQueue.main.async {
-                    self.error = "Error during write: \(error!.localizedDescription)"
-                    self.lastPageWritten = 0
-                }
-                return
-            }
-            DispatchQueue.main.async {
-                self.lastPageWritten = page
-            }
-            completionHandler()
         }
     }
 
@@ -255,20 +240,23 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         }
     }
 
-    func addChecksum(_ data: Data) -> Data {
-        var crc = crc16ccitt([UInt8](data))
-        return data + Data(bytes: &crc, count: MemoryLayout<UInt16>.size)
-    }
-
-    func crc16ccitt(_ data: [UInt8], seed: UInt16 = 0x6363, final: UInt16 = 0xffff)-> UInt16 {
-        var crc = seed
-        data.forEach { (byte) in
-            crc ^= UInt16(byte) << 8
-            (0..<8).forEach({ _ in
-                crc = (crc & UInt16(0x8000)) != 0 ? (crc << 1) ^ 0x8408 : crc << 1
-            })
+    func writePage(_ tag: NFCMiFareTag, page: UInt8, data: Data, completionHandler: @escaping () -> Void) {
+        print("Write page \(page) \(data.hexDescription)")
+        let write = Data([MifareCommands.WRITE.rawValue, page]) + data
+        tag.sendMiFareCommand(commandPacket: write) { (_, error) in
+            if ((error) != nil) {
+                print("Error during write: \(error!.localizedDescription)")
+                DispatchQueue.main.async {
+                    self.error = "Error during write: \(error!.localizedDescription)"
+                    self.lastPageWritten = 0
+                }
+                return
+            }
+            DispatchQueue.main.async {
+                self.lastPageWritten = page
+            }
+            completionHandler()
         }
-        return UInt16(crc & final)
     }
 
     func dumpTag(_ tag: NFCMiFareTag, completionHandler: @escaping (Data) -> Void) {
@@ -276,7 +264,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     }
 
     func readAllPages(_ tag: NFCMiFareTag, startPage: UInt8, completionHandler: @escaping (Data) -> Void) {
-        if (startPage > 129) {
+        if (startPage >= NTAG215Pages.total.rawValue) {
             completionHandler(Data())
             return
         }
