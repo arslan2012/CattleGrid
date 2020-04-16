@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import CoreNFC
 
 struct ContentView: View {
     @EnvironmentObject var tagStore: TagStore
@@ -14,6 +15,10 @@ struct ContentView: View {
     var body: some View {
         VStack(alignment: .center) {
             Text("CattleGrid").font(.largeTitle)
+            if (!NFCReaderSession.readingAvailable) {
+                Text("Warning: `readingAvailable` is false")
+                    .foregroundColor(.red)
+            }
             if self.tagStore.lastPageWritten > 0 {
                 HStack() {
                     ProgressBar(value: tagStore.progress).frame(height: 20)

@@ -116,12 +116,6 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         print("Scan")
         self.error = ""
 
-        guard NFCReaderSession.readingAvailable else {
-            print("NFCReaderSession.readingAvailable failed")
-            self.error = "NFCReaderSession.readingAvailable failed"
-            return
-        }
-
         if let session = NFCTagReaderSession(pollingOption: [.iso14443], delegate: self, queue: nil) {
             session.alertMessage = "Hold your device near a tag to write."
             session.begin()
