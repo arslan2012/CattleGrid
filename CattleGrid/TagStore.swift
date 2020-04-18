@@ -75,14 +75,9 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         do {
             let items = try fm.contentsOfDirectory(at: getDocumentsDirectory(), includingPropertiesForKeys: [], options: [.skipsHiddenFiles, .skipsPackageDescendants, .skipsSubdirectoryDescendants])
             let sortedItems = items.sorted(by: { $0.lastPathComponent < $1.lastPathComponent})
-            amiibos = []
-            for item in sortedItems {
-                //print("Found \(item)")
-                if (item.lastPathComponent == KEY_RETAIL) {
-                    continue
-                }
-                amiibos.append(item)
-            }
+            amiibos = sortedItems.filter({ (item) -> Bool in
+                return (item.lastPathComponent != KEY_RETAIL)
+            })
         } catch {
             // failed to read directory – bad permissions, perhaps?
         }
