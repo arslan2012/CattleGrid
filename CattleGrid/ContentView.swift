@@ -7,18 +7,37 @@
 //
 
 import SwiftUI
-import CoreNFC
+
 
 struct ContentView: View {
     @EnvironmentObject var tagStore: TagStore
 
     var body: some View {
         VStack(alignment: .center) {
-            Text("CattleGrid").font(.largeTitle)
-            if (!NFCReaderSession.readingAvailable) {
-                Text("Warning: `readingAvailable` is false")
+            if (tagStore.readingAvailable) {
+                MainScreen(tagStore: _tagStore)
+            } else {
+                Text("Either your phone doesn't have NFC, or the app's 'entitlements' aren't correctly signed")
                     .foregroundColor(.red)
+                    .font(.largeTitle)
+                    .padding()
             }
+        }
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView().environmentObject(TagStore.shared)
+    }
+}
+
+struct MainScreen: View {
+    @EnvironmentObject var tagStore: TagStore
+
+    var body: some View {
+        VStack(alignment: .center) {
+            Text("CattleGrid").font(.largeTitle)
             if self.tagStore.lastPageWritten > 0 {
                 HStack() {
                     ProgressBar(value: tagStore.progress).frame(height: 20)
@@ -73,10 +92,3 @@ struct ContentView: View {
         return (amiibo.lastPathComponent == self.tagStore.selected?.lastPathComponent)
     }
 }
-
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView().environmentObject(TagStore.shared)
-    }
-}
-

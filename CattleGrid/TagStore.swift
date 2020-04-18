@@ -45,6 +45,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     @Published private(set) var selected: URL?
     @Published private(set) var progress : Float = 0
     @Published private(set) var error : String = ""
+    @Published private(set) var readingAvailable : Bool = NFCReaderSession.readingAvailable
 
     var lastPageWritten : UInt8 = 0 {
         willSet(newVal) {
@@ -53,7 +54,6 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     }
 
     let fm = FileManager.default
-
     var amiitool : Amiitool?
     var plain : Data = Data()
 
