@@ -11,8 +11,6 @@ import UIKit
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
-
-
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         return true
@@ -32,6 +30,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
     }
 
+    func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+        let tagStore = TagStore.shared
+        let fm = FileManager.default
+        let doc = fm.urls(for: .documentDirectory, in: .userDomainMask).first
+        guard let destination = doc?.appendingPathComponent(url.lastPathComponent) else {
+            return false
+        }
+
+        print("copy \(url) to \(destination)")
+        do {
+            try fm.copyItem(at: url, to: destination)
+        } catch {
+            return false
+        }
+
+        tagStore.loadList()
+        return true
+    }
 
 }
 
