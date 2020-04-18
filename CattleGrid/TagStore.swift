@@ -56,6 +56,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     let fm = FileManager.default
     var amiitool : Amiitool?
     var plain : Data = Data()
+    var watcher : DirectoryWatcher? = nil
 
     func start() {
         print("Start")
@@ -69,6 +70,38 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         self.amiitool = Amiitool(path: key_retail)
 
         self.loadList()
+
+        if self.watcher == nil {
+            self.watcher = DirectoryWatcher.watch(getDocumentsDirectory())
+            guard let watcher = watcher else {
+                return
+            }
+
+            watcher.onNewFiles = { newFiles in
+              self.loadList()
+            }
+
+            watcher.onDeletedFiles = { deletedFiles in
+              self.loadList()
+            }
+        }
+        guard let watcher = self.watcher else {
+            print("self.watcher not defined")
+            return
+        }
+        if (watcher.startWatching()) {
+            print("Documents watching started")
+        }
+    }
+
+    func stop() {
+        guard let watcher = self.watcher else {
+            print("self.watcher not defined")
+            return
+        }
+        if (watcher.stopWatching()) {
+            print("Documents watching paused")
+        }
     }
 
     func loadList() {

@@ -66,6 +66,7 @@ struct MainScreen: View {
                 }
             }
             .onAppear(perform: self.tagStore.start)
+            .onDisappear(perform: self.tagStore.stop)
             .overlay(
                 RoundedRectangle(cornerRadius: 20)
                     .stroke(Color.accentColor, lineWidth: 0.3)
