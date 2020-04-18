@@ -31,6 +31,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+        let needTo = url.startAccessingSecurityScopedResource()
         let tagStore = TagStore.shared
         let fm = FileManager.default
         let doc = fm.urls(for: .documentDirectory, in: .userDomainMask).first
@@ -46,8 +47,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
 
         tagStore.loadList()
+
+        if needTo {
+          url.stopAccessingSecurityScopedResource()
+        }
         return true
     }
-
 }
-
