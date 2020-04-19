@@ -62,10 +62,22 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         print("Start")
 
         let key_retail = getDocumentsDirectory().appendingPathComponent(KEY_RETAIL).path
-            if (!fm.fileExists(atPath: key_retail)) {
-                self.error = "\(KEY_RETAIL) missing"
+        if (!fm.fileExists(atPath: key_retail)) {
+            self.error = "\(KEY_RETAIL) missing"
+            return
+        }
+        do {
+            let attr = try fm.attributesOfItem(atPath: key_retail)
+            let fileSize = attr[FileAttributeKey.size] as! UInt64
+            if (fileSize != 160) {
+                self.error = "\(KEY_RETAIL) is not the correct size"
                 return
             }
+        } catch {
+            print(error)
+            self.error = "Error getting size of \(KEY_RETAIL)"
+            return
+        }
 
         self.amiitool = Amiitool(path: key_retail)
 
