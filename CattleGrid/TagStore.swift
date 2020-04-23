@@ -174,14 +174,6 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         print("didDetect: \(tags)")
 
         if case let NFCTag.miFare(tag) = tags.first! {
-            guard tag.mifareFamily == .ultralight else {
-                print("Ignoring non-ultralight \(tag.mifareFamily.rawValue)")
-                DispatchQueue.main.async {
-                    self.error = "Ignoring non-ultralight"
-                }
-                return
-            }
-
             session.connect(to: tags.first!) { (error: Error?) in
                 if ((error) != nil) {
                     print("Error during connect: \(error!.localizedDescription)")
