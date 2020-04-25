@@ -17,12 +17,17 @@ enum MifareCommands : UInt8 {
     case PWD_AUTH = 0x1B
 }
 
+let NTAG_PAGE_SIZE = 4
+
 let KEY_RETAIL = "key_retail.bin"
+let KEY_RETAIL_SIZE = 160
 
 enum NTAG215Pages : UInt8 {
     case staticLockBits = 2
     case capabilityContainer = 3
     case userMemoryFirst = 4
+    case characterModelHead = 21
+    case characterModelTail = 22
     case userMemoryLast = 129
     case dynamicLockBits = 130
     case cfg0 = 131
@@ -69,7 +74,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         do {
             let attr = try fm.attributesOfItem(atPath: key_retail)
             let fileSize = attr[FileAttributeKey.size] as! UInt64
-            if (fileSize != 160) {
+            if (fileSize != KEY_RETAIL_SIZE) {
                 self.error = "\(KEY_RETAIL) is not the correct size"
                 return
             }
@@ -145,12 +150,15 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
                 self.error = "Internal error: amiitool not initialized"
                 return
             }
+
+            let start = NTAG_PAGE_SIZE * Int(NTAG215Pages.characterModelHead.rawValue)
+            let end = NTAG_PAGE_SIZE * Int(NTAG215Pages.characterModelTail.rawValue+1)
+            let id = tag.subdata(in: start..<end)
+            print("Unpacked: \(id.hexDescription)")
+
             plain = amiitool.unpack(tag)
             print("\(amiiboPath.lastPathComponent) loaded")
             self.selected = amiiboPath
-            
-            let id = plain.subdata(in: 0x1dc..<0x1e4)
-            print("Unpacked: \(id.hexDescription)")
         } catch {
             print("Couldn't read \(amiiboPath)")
         }

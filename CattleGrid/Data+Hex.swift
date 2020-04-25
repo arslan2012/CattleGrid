@@ -18,6 +18,4 @@ extension Data {
         let hexBytes : [UInt8] = hexArray.map({UInt8($0, radix: 0x10)!})
         self.init(hexBytes)
     }
-
-    
 }
