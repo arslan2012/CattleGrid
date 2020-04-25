@@ -121,7 +121,13 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             let items = try fm.contentsOfDirectory(at: getDocumentsDirectory(), includingPropertiesForKeys: [], options: [.skipsHiddenFiles, .skipsPackageDescendants, .skipsSubdirectoryDescendants])
             let sortedItems = items.sorted(by: { $0.lastPathComponent < $1.lastPathComponent})
             amiibos = sortedItems.filter({ (item) -> Bool in
-                return (item.lastPathComponent != KEY_RETAIL)
+                do {
+                    let isDir = (try item.resourceValues(forKeys: [.isDirectoryKey])).isDirectory ?? false
+                    let isKeyRetail = item.lastPathComponent == KEY_RETAIL
+                    return !isDir && !isKeyRetail
+                } catch {
+                    return false
+                }
             })
         } catch {
             // failed to read directory – bad permissions, perhaps?
@@ -129,9 +135,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     }
 
     func getDocumentsDirectory() -> URL {
-        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        let documentsDirectory = paths[0]
-        return documentsDirectory
+        return fm.urls(for: .documentDirectory, in: .userDomainMask).first!
     }
 
     func load(_ amiiboPath: URL) {
