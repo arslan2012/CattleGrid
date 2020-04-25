@@ -154,7 +154,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             let start = NTAG_PAGE_SIZE * Int(NTAG215Pages.characterModelHead.rawValue)
             let end = NTAG_PAGE_SIZE * Int(NTAG215Pages.characterModelTail.rawValue+1)
             let id = tag.subdata(in: start..<end)
-            print("Unpacked: \(id.hexDescription)")
+            print("character id: \(id.hexDescription)")
 
             plain = amiitool.unpack(tag)
             print("\(amiiboPath.lastPathComponent) loaded")
