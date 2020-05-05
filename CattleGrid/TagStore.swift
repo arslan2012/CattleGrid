@@ -226,6 +226,22 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
                 return
             }
 
+            let cc = data.subdata(in: 12..<16)
+            let size = cc[2];
+            if (size == 0x12) {
+                DispatchQueue.main.async {
+                    self.error = "NTAG213"
+                }
+                session.invalidate()
+                return
+            } else if (size == 0x6D) {
+                DispatchQueue.main.async {
+                    self.error = "NTAG216"
+                }
+                session.invalidate()
+                return
+            }
+
             guard let amiitool = self.amiitool else {
                 DispatchQueue.main.async {
                     self.error = "Internal error: amiitool not initialized"
@@ -234,7 +250,6 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             }
 
             //Amiitool plain text stores first 2 pages (uid) towards the end
-            //TODO: is uid even used in encryption/signing?
             self.plain.replaceSubrange(468..<476, with: data.subdata(in: 0..<8))
 
             let modified = amiitool.pack(self.plain)
