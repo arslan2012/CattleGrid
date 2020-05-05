@@ -66,26 +66,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     func start() {
         print("Start")
 
-        let key_retail = getDocumentsDirectory().appendingPathComponent(KEY_RETAIL).path
-        if (!fm.fileExists(atPath: key_retail)) {
-            self.error = "\(KEY_RETAIL) missing"
-            return
-        }
-        do {
-            let attr = try fm.attributesOfItem(atPath: key_retail)
-            let fileSize = attr[FileAttributeKey.size] as! UInt64
-            if (fileSize != KEY_RETAIL_SIZE) {
-                self.error = "\(KEY_RETAIL) is not the correct size"
-                return
-            }
-        } catch {
-            print(error)
-            self.error = "Error getting size of \(KEY_RETAIL)"
-            return
-        }
-
-        self.amiitool = Amiitool(path: key_retail)
-
+        self.loadKeyRetail()
         self.loadList()
 
         if self.watcher == nil {
@@ -95,11 +76,14 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             }
 
             watcher.onNewFiles = { newFiles in
-              self.loadList()
+                if (self.amiitool == nil) {
+                    self.loadKeyRetail();
+                }
+                self.loadList()
             }
 
             watcher.onDeletedFiles = { deletedFiles in
-              self.loadList()
+                self.loadList()
             }
         }
         guard let watcher = self.watcher else {
@@ -119,6 +103,29 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         if (watcher.stopWatching()) {
             print("Documents watching paused")
         }
+    }
+
+    func loadKeyRetail() {
+        let key_retail = getDocumentsDirectory().appendingPathComponent(KEY_RETAIL).path
+        if (!fm.fileExists(atPath: key_retail)) {
+            self.error = "\(KEY_RETAIL) missing"
+            return
+        }
+        do {
+            let attr = try fm.attributesOfItem(atPath: key_retail)
+            let fileSize = attr[FileAttributeKey.size] as! UInt64
+            if (fileSize != KEY_RETAIL_SIZE) {
+                self.error = "\(KEY_RETAIL) is not the correct size"
+                return
+            }
+        } catch {
+            print(error)
+            self.error = "Error getting size of \(KEY_RETAIL)"
+            return
+        }
+
+        self.error = ""
+        self.amiitool = Amiitool(path: key_retail)
     }
 
     func loadList() {
