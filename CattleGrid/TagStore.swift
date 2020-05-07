@@ -21,6 +21,7 @@ let NTAG_PAGE_SIZE = 4
 
 let KEY_RETAIL = "key_retail.bin"
 let KEY_RETAIL_SIZE = 160
+let KEY_RETAIL_SHA1 = "bbdbb49a917d14f7a997d327ba40d40c39e606ce"
 
 enum NTAG215Pages : UInt8 {
     case staticLockBits = 2
@@ -121,6 +122,12 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         } catch {
             print(error)
             self.error = "Error getting size of \(KEY_RETAIL)"
+            return
+        }
+
+        let sha1sum = SHA1.hexString(fromFile: key_retail)
+        if (sha1sum != KEY_RETAIL_SHA1) {
+            self.error = "\(KEY_RETAIL) has the wrong sha1"
             return
         }
 
@@ -292,7 +299,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             return
         }
 
-        let page = data.subdata(in: Int(startPage) * 4 ..< Int(startPage) * 4 + 4)
+        let page = data.page(startPage)
         writePage(tag, page: startPage, data: page) {
             self.writeUserPages(tag, startPage: startPage+1, data: data) { () in
                 completionHandler()
