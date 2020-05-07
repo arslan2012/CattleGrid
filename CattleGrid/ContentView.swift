@@ -33,13 +33,14 @@ struct ContentView_Previews: PreviewProvider {
 }
 
 struct MainScreen: View {
+    let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
     @EnvironmentObject var tagStore: TagStore
 
     var body: some View {
         VStack(alignment: .center) {
             Text("CattleGrid").font(.largeTitle)
             if self.tagStore.lastPageWritten > 0 {
-                HStack() {
+                HStack {
                     ProgressBar(value: tagStore.progress).frame(height: 20)
                     Text("\(tagStore.progress * 100, specifier: "%.2f")%")
                         .font(.subheadline)
@@ -54,10 +55,23 @@ struct MainScreen: View {
             NavigationView {
                 if (tagStore.amiibos.count > 0) {
                     List(tagStore.amiibos, id:\.path) { amiibo in
-                        Text(amiibo.lastPathComponent).onTapGesture {
-                            self.tagStore.load(amiibo)
+                        if (amiibo.pathExtension == "bin") { // File
+                            Text(amiibo.deletingPathExtension().lastPathComponent).onTapGesture {
+                                self.tagStore.load(amiibo)
+                            }
+                            .foregroundColor(self.selected(amiibo) ? .primary : .secondary)
+                        } else if (amiibo.lastPathComponent == "..") { // Back
+                            Image(systemName: "arrowshape.turn.up.left.fill").onTapGesture {
+                                self.tagStore.load(amiibo)
+                            }
+                        } else { // Folder
+                            HStack {
+                                Text(amiibo.lastPathComponent)
+                                Text("").frame(maxWidth: .infinity)
+                                Image(systemName: "chevron.right")
+                            }
+                            .onTapGesture { self.tagStore.load(amiibo) }
                         }
-                        .foregroundColor(self.selected(amiibo) ? .primary : .secondary)
                     }
                     .hiddenNavigationBarStyle()
                 } else {

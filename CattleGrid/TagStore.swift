@@ -52,6 +52,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     @Published private(set) var progress : Float = 0
     @Published private(set) var error : String = ""
     @Published private(set) var readingAvailable : Bool = NFCReaderSession.readingAvailable
+    @Published private(set) var currentDir : URL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
 
     var lastPageWritten : UInt8 = 0 {
         willSet(newVal) {
@@ -61,7 +62,6 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
 
     let fm = FileManager.default
     let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-    var currentDir : URL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
 
     var amiitool : Amiitool?
     var plain : Data = Data()
@@ -153,8 +153,8 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
                 return item.lastPathComponent != KEY_RETAIL
             })
 
-            if (self.currentDir.standardizedFileURL != self.documents.standardizedFileURL) {
-                amiibos.insert(self.currentDir.deletingLastPathComponent(), at: 0)
+            if (self.currentDir.standardizedFileURL != self.documents.standardizedFileURL) {                
+                amiibos.insert(self.currentDir.appendingPathComponent(".."), at: 0)
             }
         } catch {
             // failed to read directory – bad permissions, perhaps?
