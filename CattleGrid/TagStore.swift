@@ -60,9 +60,13 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     }
 
     let fm = FileManager.default
+    let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+    var currentDir : URL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+
     var amiitool : Amiitool?
     var plain : Data = Data()
     var watcher : DirectoryWatcher? = nil
+
 
     func start() {
         print("Start")
@@ -71,7 +75,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         self.loadList()
 
         if self.watcher == nil {
-            self.watcher = DirectoryWatcher.watch(getDocumentsDirectory())
+            self.watcher = DirectoryWatcher.watch(self.documents)
             guard let watcher = watcher else {
                 return
             }
@@ -107,7 +111,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     }
 
     func loadKeyRetail() {
-        let key_retail = getDocumentsDirectory().appendingPathComponent(KEY_RETAIL).path
+        let key_retail = self.documents.appendingPathComponent(KEY_RETAIL).path
         if (!fm.fileExists(atPath: key_retail)) {
             self.error = "\(KEY_RETAIL) missing"
             return
@@ -143,28 +147,41 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
 
     func loadList() {
         do {
-            let items = try fm.contentsOfDirectory(at: getDocumentsDirectory(), includingPropertiesForKeys: [], options: [.skipsHiddenFiles, .skipsPackageDescendants, .skipsSubdirectoryDescendants])
+            let items = try fm.contentsOfDirectory(at: self.currentDir, includingPropertiesForKeys: [], options: [.skipsHiddenFiles, .skipsPackageDescendants, .skipsSubdirectoryDescendants])
             let sortedItems = items.sorted(by: { $0.lastPathComponent < $1.lastPathComponent})
             amiibos = sortedItems.filter({ (item) -> Bool in
-                do {
-                    let isDir = (try item.resourceValues(forKeys: [.isDirectoryKey])).isDirectory ?? false
-                    let isKeyRetail = item.lastPathComponent == KEY_RETAIL
-                    return !isDir && !isKeyRetail
-                } catch {
-                    return false
-                }
+                return item.lastPathComponent != KEY_RETAIL
             })
+
+            if (self.currentDir.standardizedFileURL != self.documents.standardizedFileURL) {
+                amiibos.insert(self.currentDir.deletingLastPathComponent(), at: 0)
+            }
         } catch {
             // failed to read directory – bad permissions, perhaps?
         }
     }
 
-    func getDocumentsDirectory() -> URL {
-        return fm.urls(for: .documentDirectory, in: .userDomainMask).first!
+    func load(_ path: URL) {
+        do {
+            let isDir = (try path.resourceValues(forKeys: [.isDirectoryKey])).isDirectory ?? false
+            if (isDir) {
+                loadFolder(path)
+            } else {
+                loadFile(path)
+            }
+        } catch {
+            print("Couldn't read \(path)")
+        }
     }
 
-    func load(_ amiiboPath: URL) {
+    func loadFolder(_ path: URL) {
+        self.currentDir = path;
+        self.loadList()
+    }
+
+    func loadFile(_ amiiboPath: URL) {
         do {
+
             let tag = try Data(contentsOf: amiiboPath)
             guard let amiitool = self.amiitool else {
                 self.error = "Internal error: amiitool not initialized"
