@@ -125,9 +125,15 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             return
         }
 
-        let sha1sum = SHA1.hexString(fromFile: key_retail)
-        if (sha1sum != KEY_RETAIL_SHA1) {
+        guard let sha1sum = SHA1.hexString(fromFile: key_retail) else {
+            self.error = "Couoldn't calculate \(KEY_RETAIL) sha1"
+            return
+        }
+
+        let normalizedSha1 = sha1sum.lowercased().filter { !$0.isNewline && !$0.isWhitespace }
+        if (normalizedSha1 != KEY_RETAIL_SHA1) {
             self.error = "\(KEY_RETAIL) has the wrong sha1"
+            print("\(KEY_RETAIL) sha is \(sha1sum)")
             return
         }
 
