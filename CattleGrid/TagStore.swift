@@ -217,6 +217,17 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
 
     func tagReaderSession(_ session: NFCTagReaderSession, didInvalidateWithError error: Error) {
         print("didInvalidateWithError: \(error.localizedDescription)")
+
+        if (error.localizedDescription == "Session timeout") {
+            return
+        }
+        if (error.localizedDescription == "Session invalidated by user") {
+            return
+        }
+        DispatchQueue.main.async {
+            self.error = "Error during session: \(error.localizedDescription)"
+            self.lastPageWritten = 0
+        }
     }
 
     func tagReaderSession(_ session: NFCTagReaderSession, didDetect tags: [NFCTag]) {
@@ -256,6 +267,15 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
                 return
             }
 
+            guard data.count == 16 else {
+                print("Incorrect data size: \(data.hexDescription)")
+                DispatchQueue.main.async {
+                    self.error = "Couldn't read tag UID"
+                    self.lastPageWritten = 0
+                }
+                session.invalidate()
+                return
+            }
             let cc = data.subdata(in: 12..<16)
             let size = cc[2];
             if (size == 0x12) {
@@ -270,6 +290,10 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
                 }
                 session.invalidate()
                 return
+            } else if (size == 0x3E) {
+                //NTAG215
+            } else {
+                print("Unexpected size from CC: \(size)")
             }
 
             guard let amiitool = self.amiitool else {
