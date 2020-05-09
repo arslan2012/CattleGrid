@@ -52,22 +52,22 @@ struct MainScreen: View {
             }
             //File selector
             NavigationView {
-                if (tagStore.amiibos.count > 0) {
-                    List(tagStore.amiibos, id:\.path) { amiibo in
-                        if (amiibo.pathExtension == "bin") { // File
-                            Text(amiibo.deletingPathExtension().lastPathComponent).onTapGesture {
-                                self.tagStore.load(amiibo)
+                if (tagStore.files.count > 0) {
+                    List(tagStore.files, id:\.path) { file in
+                        if (file.pathExtension == "bin") { // File
+                            Text(file.deletingPathExtension().lastPathComponent).onTapGesture {
+                                self.tagStore.load(file)
                             }
-                            .foregroundColor(self.selected(amiibo) ? .primary : .secondary)
+                            .foregroundColor(self.selected(file) ? .primary : .secondary)
                         } else { // Folder
                             HStack {
-                                Text(amiibo.lastPathComponent)
+                                Text(file.lastPathComponent)
                                 Text("")
                                     .frame(maxWidth: .infinity)
                                     .background(Color(UIColor.systemBackground)) //'invisible' tappable target
                                 Image(systemName: "chevron.right")
                             }
-                            .onTapGesture { self.tagStore.load(amiibo) }
+                            .onTapGesture { self.tagStore.load(file) }
                         }
                     }
                     .navigationBarTitle(Text(title()), displayMode: .inline)
@@ -109,8 +109,8 @@ struct MainScreen: View {
         .padding()
     }
 
-    func selected(_ amiibo: URL) -> Bool {
-        return (amiibo.lastPathComponent == self.tagStore.selected?.lastPathComponent)
+    func selected(_ file: URL) -> Bool {
+        return (file.lastPathComponent == self.tagStore.selected?.lastPathComponent)
     }
 
     func atDocumentsDir() -> Bool {

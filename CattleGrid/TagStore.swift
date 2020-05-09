@@ -47,7 +47,7 @@ let PACKRFUI = Data([0x80, 0x80, 0x00, 0x00])
 
 class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     static let shared = TagStore()
-    @Published private(set) var amiibos: [URL] = []
+    @Published private(set) var files: [URL] = []
     @Published private(set) var selected: URL?
     @Published private(set) var progress : Float = 0
     @Published private(set) var error : String = ""
@@ -149,7 +149,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         do {
             let items = try fm.contentsOfDirectory(at: self.currentDir, includingPropertiesForKeys: [], options: [.skipsHiddenFiles, .skipsPackageDescendants, .skipsSubdirectoryDescendants])
             let sortedItems = items.sorted(by: { $0.lastPathComponent < $1.lastPathComponent})
-            amiibos = sortedItems.filter({ (item) -> Bool in
+            files = sortedItems.filter({ (item) -> Bool in
                 return item.lastPathComponent != KEY_RETAIL
             })
         } catch {
@@ -175,10 +175,10 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         self.loadList()
     }
 
-    func loadFile(_ amiiboPath: URL) {
+    func loadFile(_ path: URL) {
         do {
 
-            let tag = try Data(contentsOf: amiiboPath)
+            let tag = try Data(contentsOf: path)
             guard let amiitool = self.amiitool else {
                 self.error = "Internal error: amiitool not initialized"
                 return
@@ -190,10 +190,10 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             print("character id: \(id.hexDescription)")
 
             plain = amiitool.unpack(tag)
-            print("\(amiiboPath.lastPathComponent) loaded")
-            self.selected = amiiboPath
+            print("\(path.lastPathComponent) loaded")
+            self.selected = path
         } catch {
-            print("Couldn't read \(amiiboPath)")
+            print("Couldn't read \(path)")
         }
     }
 
