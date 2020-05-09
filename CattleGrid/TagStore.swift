@@ -110,39 +110,40 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         }
     }
 
-    func loadKeyRetail() {
+    func loadKeyRetail() -> Bool {
         let key_retail = self.documents.appendingPathComponent(KEY_RETAIL).path
         if (!fm.fileExists(atPath: key_retail)) {
             self.error = "\(KEY_RETAIL) missing"
-            return
+            return false
         }
         do {
             let attr = try fm.attributesOfItem(atPath: key_retail)
             let fileSize = attr[FileAttributeKey.size] as! UInt64
             if (fileSize != KEY_RETAIL_SIZE) {
                 self.error = "\(KEY_RETAIL) is not the correct size"
-                return
+                return false
             }
         } catch {
             print(error)
             self.error = "Error getting size of \(KEY_RETAIL)"
-            return
+            return false
         }
 
         guard let sha1sum = SHA1.hexString(fromFile: key_retail) else {
             self.error = "Couoldn't calculate \(KEY_RETAIL) sha1"
-            return
+            return false
         }
 
         let normalizedSha1 = sha1sum.lowercased().filter { !$0.isNewline && !$0.isWhitespace }
         if (normalizedSha1 != KEY_RETAIL_SHA1) {
             self.error = "\(KEY_RETAIL) has the wrong sha1"
             print("\(KEY_RETAIL) sha is \(sha1sum)")
-            return
+            return false
         }
 
         self.error = ""
         self.amiitool = Amiitool(path: key_retail)
+        return true
     }
 
     func loadList() {
@@ -176,13 +177,16 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     }
 
     func loadFile(_ path: URL) {
-        do {
+        guard loadKeyRetail() else {
+            return
+        }
+        guard let amiitool = self.amiitool else {
+            self.error = "Internal error: amiitool not initialized"
+            return
+        }
 
+        do {
             let tag = try Data(contentsOf: path)
-            guard let amiitool = self.amiitool else {
-                self.error = "Internal error: amiitool not initialized"
-                return
-            }
 
             let start = NTAG_PAGE_SIZE * Int(NTAG215Pages.characterModelHead.rawValue)
             let end = NTAG_PAGE_SIZE * Int(NTAG215Pages.characterModelTail.rawValue+1)
