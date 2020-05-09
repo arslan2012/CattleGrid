@@ -62,7 +62,9 @@ struct MainScreen: View {
                         } else { // Folder
                             HStack {
                                 Text(amiibo.lastPathComponent)
-                                Text("").frame(maxWidth: .infinity)
+                                Text("")
+                                    .frame(maxWidth: .infinity)
+                                    .background(Color(UIColor.systemBackground)) //'invisible' tappable target
                                 Image(systemName: "chevron.right")
                             }
                             .onTapGesture { self.tagStore.load(amiibo) }
