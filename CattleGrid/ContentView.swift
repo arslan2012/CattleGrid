@@ -38,7 +38,6 @@ struct MainScreen: View {
 
     var body: some View {
         VStack(alignment: .center) {
-            Text("CattleGrid").font(.largeTitle)
             if self.tagStore.lastPageWritten > 0 {
                 HStack {
                     ProgressBar(value: tagStore.progress).frame(height: 20)
@@ -60,10 +59,6 @@ struct MainScreen: View {
                                 self.tagStore.load(amiibo)
                             }
                             .foregroundColor(self.selected(amiibo) ? .primary : .secondary)
-                        } else if (amiibo.lastPathComponent == "..") { // Back
-                            Image(systemName: "arrowshape.turn.up.left.fill").onTapGesture {
-                                self.tagStore.load(amiibo)
-                            }
                         } else { // Folder
                             HStack {
                                 Text(amiibo.lastPathComponent)
@@ -73,7 +68,16 @@ struct MainScreen: View {
                             .onTapGesture { self.tagStore.load(amiibo) }
                         }
                     }
-                    .hiddenNavigationBarStyle()
+                    .navigationBarTitle(Text(title()), displayMode: .inline)
+                    .navigationBarItems(
+                        leading: Button(action: {
+                            self.tagStore.load(self.tagStore.currentDir.deletingLastPathComponent())
+                        }) {
+                            Image(systemName: "chevron.left")
+                            Text("Back")
+                        }
+                        .disabled(atDocumentsDir())
+                    )
                 } else {
                     Text("No figures.").font(.headline)
                     Text("https://support.apple.com/en-us/HT201301").font(.subheadline)
@@ -105,5 +109,17 @@ struct MainScreen: View {
 
     func selected(_ amiibo: URL) -> Bool {
         return (amiibo.lastPathComponent == self.tagStore.selected?.lastPathComponent)
+    }
+
+    func atDocumentsDir() -> Bool {
+        return tagStore.currentDir.standardizedFileURL == self.documents.standardizedFileURL
+    }
+
+    func title() -> String {
+        if (atDocumentsDir()) {
+            return "CattleGrid"
+        } else {
+            return self.tagStore.currentDir.lastPathComponent
+        }
     }
 }

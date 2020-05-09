@@ -152,10 +152,6 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             amiibos = sortedItems.filter({ (item) -> Bool in
                 return item.lastPathComponent != KEY_RETAIL
             })
-
-            if (self.currentDir.standardizedFileURL != self.documents.standardizedFileURL) {                
-                amiibos.insert(self.currentDir.appendingPathComponent(".."), at: 0)
-            }
         } catch {
             // failed to read directory – bad permissions, perhaps?
         }
