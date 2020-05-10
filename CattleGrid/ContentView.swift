@@ -55,11 +55,8 @@ struct MainScreen: View {
             NavigationView {
                 if (tagStore.files.count > 0) {
                     List(tagStore.files, id:\.path) { file in
-                        ListElement(name: file.lastPathComponent, selected: self.selected(file), isFile: (file.pathExtension == "bin"), cb: {
+                        ListElement(name: file.deletingPathExtension().lastPathComponent, selected: self.selected(file), isFile: (file.pathExtension == "bin"), cb: {
                             self.tagStore.load(file)
-                            if (file.pathExtension == "bin") {
-                                UIApplication.shared.endEditing() // Call to dismiss keyboard
-                            }
                         })
                     }
                     .navigationBarTitle(Text(title()), displayMode: .inline)
