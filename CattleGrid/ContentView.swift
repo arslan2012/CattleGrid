@@ -35,6 +35,7 @@ struct ContentView_Previews: PreviewProvider {
 struct MainScreen: View {
     let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
     @EnvironmentObject var tagStore: TagStore
+    @State private var searchText : String = ""
 
     var body: some View {
         VStack(alignment: .center) {
@@ -54,21 +55,12 @@ struct MainScreen: View {
             NavigationView {
                 if (tagStore.files.count > 0) {
                     List(tagStore.files, id:\.path) { file in
-                        if (file.pathExtension == "bin") { // File
-                            Text(file.deletingPathExtension().lastPathComponent).onTapGesture {
-                                self.tagStore.load(file)
+                        ListElement(name: file.lastPathComponent, selected: self.selected(file), isFile: (file.pathExtension == "bin"), cb: {
+                            self.tagStore.load(file)
+                            if (file.pathExtension == "bin") {
+                                UIApplication.shared.endEditing() // Call to dismiss keyboard
                             }
-                            .foregroundColor(self.selected(file) ? .primary : .secondary)
-                        } else { // Folder
-                            HStack {
-                                Text(file.lastPathComponent)
-                                Text("")
-                                    .frame(maxWidth: .infinity)
-                                    .background(Color(UIColor.systemBackground)) //'invisible' tappable target
-                                Image(systemName: "chevron.right")
-                            }
-                            .onTapGesture { self.tagStore.load(file) }
-                        }
+                        })
                     }
                     .navigationBarTitle(Text(title()), displayMode: .inline)
                     .navigationBarItems(
@@ -78,11 +70,14 @@ struct MainScreen: View {
                             Image(systemName: "chevron.left")
                             Text("Back")
                         }
-                        .disabled(atDocumentsDir())
+                        .disabled(atDocumentsDir()),
+                        trailing: Button(action: {
+                        }) {
+                            Image(systemName: "magnifyingglass")
+                        }.disabled(true)
                     )
                 } else {
-                    Text("No figures.").font(.headline)
-                    Text("https://support.apple.com/en-us/HT201301").font(.subheadline)
+                    NoFigures()
                 }
             }
             .onAppear(perform: self.tagStore.start)
@@ -109,6 +104,10 @@ struct MainScreen: View {
         .padding()
     }
 
+    func filtered(_ urls: [URL]) -> [URL] {
+        return urls.filter{ self.searchText.isEmpty ? true : $0.lastPathComponent.contains(self.searchText) }
+    }
+
     func selected(_ file: URL) -> Bool {
         return (file.lastPathComponent == self.tagStore.selected?.lastPathComponent)
     }
@@ -122,6 +121,41 @@ struct MainScreen: View {
             return "CattleGrid"
         } else {
             return self.tagStore.currentDir.lastPathComponent
+        }
+    }
+}
+
+struct ListElement: View {
+    let name : String
+    let selected : Bool
+    let isFile : Bool
+    let cb : () -> Void
+
+    var body: some View {
+        HStack {
+            if (isFile) {
+                Text(name)
+                    .foregroundColor(selected ? .primary : .secondary)
+                    .onTapGesture(perform: cb)
+            } else { // Folder
+                HStack {
+                    Text(name)
+                    Text("")
+                        .frame(maxWidth: .infinity)
+                        .background(Color(UIColor.systemBackground)) //'invisible' tappable target
+                    Image(systemName: "chevron.right")
+                }
+                .onTapGesture(perform: cb)
+            }
+        }
+    }
+}
+
+struct NoFigures : View {
+    var body: some View {
+        VStack{
+            Text("No figures.").font(.headline)
+            Text("https://support.apple.com/en-us/HT201301").font(.subheadline)
         }
     }
 }

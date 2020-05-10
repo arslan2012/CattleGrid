@@ -11,6 +11,7 @@
 		6D2E609724634AD900EDB6FF /* SHA1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D2E609624634AD900EDB6FF /* SHA1.swift */; };
 		6D610352244B5E74003B7482 /* DirectoryWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D610351244B5E74003B7482 /* DirectoryWatcher.swift */; };
 		6D843CAC244578180014C4FC /* ProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D843CAB244578180014C4FC /* ProgressBar.swift */; };
+		6DBE5C052467A44100A0CB33 /* UIApplication+endEditing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DBE5C042467A44100A0CB33 /* UIApplication+endEditing.swift */; };
 		6DC5860C24417199006DA042 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC5860B24417199006DA042 /* AppDelegate.swift */; };
 		6DC5860E24417199006DA042 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC5860D24417199006DA042 /* SceneDelegate.swift */; };
 		6DC5861024417199006DA042 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC5860F24417199006DA042 /* ContentView.swift */; };
@@ -29,6 +30,7 @@
 		6D2E609624634AD900EDB6FF /* SHA1.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SHA1.swift; sourceTree = "<group>"; };
 		6D610351244B5E74003B7482 /* DirectoryWatcher.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DirectoryWatcher.swift; sourceTree = "<group>"; };
 		6D843CAB244578180014C4FC /* ProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressBar.swift; sourceTree = "<group>"; };
+		6DBE5C042467A44100A0CB33 /* UIApplication+endEditing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIApplication+endEditing.swift"; sourceTree = "<group>"; };
 		6DC5860824417199006DA042 /* CattleGrid.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CattleGrid.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6DC5860B24417199006DA042 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		6DC5860D24417199006DA042 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -81,6 +83,7 @@
 				6DC5860B24417199006DA042 /* AppDelegate.swift */,
 				6DC5860D24417199006DA042 /* SceneDelegate.swift */,
 				6DC5860F24417199006DA042 /* ContentView.swift */,
+				6DBE5C042467A44100A0CB33 /* UIApplication+endEditing.swift */,
 				6D843CAB244578180014C4FC /* ProgressBar.swift */,
 				6DD45BC72443BCD300C5C925 /* ViewModifiers.swift */,
 				6DC58611244171AB006DA042 /* Assets.xcassets */,
@@ -181,6 +184,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6DD45BC6244383AD00C5C925 /* Amiitool.swift in Sources */,
+				6DBE5C052467A44100A0CB33 /* UIApplication+endEditing.swift in Sources */,
 				6DC5860C24417199006DA042 /* AppDelegate.swift in Sources */,
 				6DC58623244178F1006DA042 /* Data+Hex.swift in Sources */,
 				6DD45BC82443BCD300C5C925 /* ViewModifiers.swift in Sources */,
