@@ -77,7 +77,7 @@ struct MainScreen: View {
                         }.disabled(true)
                     )
                 } else {
-                    NoFigures()
+                    Text("No figures.").font(.headline)
                 }
             }
             .onAppear(perform: self.tagStore.start)
@@ -147,15 +147,6 @@ struct ListElement: View {
                 }
                 .onTapGesture(perform: cb)
             }
-        }
-    }
-}
-
-struct NoFigures : View {
-    var body: some View {
-        VStack{
-            Text("No figures.").font(.headline)
-            Text("https://support.apple.com/en-us/HT201301").font(.subheadline)
         }
     }
 }
