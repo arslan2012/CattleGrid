@@ -71,7 +71,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     func start() {
         print("Start")
 
-        self.loadKeyRetail()
+        _ = self.loadKeyRetail()
         self.loadList()
 
         if self.watcher == nil {
@@ -82,7 +82,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
 
             watcher.onNewFiles = { newFiles in
                 if (self.amiitool == nil) {
-                    self.loadKeyRetail();
+                    _ = self.loadKeyRetail();
                 }
                 self.loadList()
             }
