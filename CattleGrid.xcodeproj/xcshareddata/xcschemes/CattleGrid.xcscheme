@@ -92,5 +92,41 @@
    <ArchiveAction
       buildConfiguration = "Release"
       revealArchiveInOrganizer = "YES">
+      <PreActions>
+         <ExecutionAction
+            ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
+            <ActionContent
+               title = "Run Script"
+               scriptText = "PLIST=&quot;${PROJECT_DIR}/${INFOPLIST_FILE}&quot;&#10;PLB=/usr/libexec/PlistBuddy&#10;LAST_NUMBER=$($PLB -c &quot;Print CFBundleVersion&quot; &quot;$PLIST&quot;)&#10;NEW_VERSION=$(($LAST_NUMBER - 1))&#10;$PLB -c &quot;Set :CFBundleVersion $NEW_VERSION&quot; &quot;$PLIST&quot;&#10;">
+               <EnvironmentBuildable>
+                  <BuildableReference
+                     BuildableIdentifier = "primary"
+                     BlueprintIdentifier = "6DC5860724417199006DA042"
+                     BuildableName = "CattleGrid.app"
+                     BlueprintName = "CattleGrid"
+                     ReferencedContainer = "container:CattleGrid.xcodeproj">
+                  </BuildableReference>
+               </EnvironmentBuildable>
+            </ActionContent>
+         </ExecutionAction>
+      </PreActions>
+      <PostActions>
+         <ExecutionAction
+            ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
+            <ActionContent
+               title = "Run Script"
+               scriptText = "SHORT_VERSION=$($PLB -c &quot;Print CFBundleShortVersionString&quot; &quot;$PLIST&quot;)&#10;BUILD_NUMBER=$($PLB -c &quot;Print CFBundleVersion&quot; &quot;$PLIST&quot;)# Tag version.&#10;cd ${PROJECT_DIR}&#10;git tag v$SHORT_VERSION-build$BUILD_NUMBER&#10;">
+               <EnvironmentBuildable>
+                  <BuildableReference
+                     BuildableIdentifier = "primary"
+                     BlueprintIdentifier = "6DC5860724417199006DA042"
+                     BuildableName = "CattleGrid.app"
+                     BlueprintName = "CattleGrid"
+                     ReferencedContainer = "container:CattleGrid.xcodeproj">
+                  </BuildableReference>
+               </EnvironmentBuildable>
+            </ActionContent>
+         </ExecutionAction>
+      </PostActions>
    </ArchiveAction>
 </Scheme>
