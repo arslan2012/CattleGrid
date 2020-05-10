@@ -154,7 +154,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             let items = try fm.contentsOfDirectory(at: self.currentDir, includingPropertiesForKeys: [], options: [.skipsHiddenFiles, .skipsPackageDescendants, .skipsSubdirectoryDescendants])
             let sortedItems = items.sorted(by: { $0.lastPathComponent < $1.lastPathComponent})
             files = sortedItems.filter({ (item) -> Bool in
-                return item.lastPathComponent != KEY_RETAIL
+                return item.lastPathComponent != KEY_RETAIL && item.pathExtension == "bin"
             })
         } catch {
             // failed to read directory – bad permissions, perhaps?
@@ -200,7 +200,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             print("\(path.lastPathComponent) loaded")
             self.selected = path
         } catch {
-            print("Couldn't read \(path)")
+            self.error = "Couldn't read \(path)"
         }
     }
 

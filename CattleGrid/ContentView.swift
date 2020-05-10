@@ -70,11 +70,7 @@ struct MainScreen: View {
                             Image(systemName: "chevron.left")
                             Text("Back")
                         }
-                        .disabled(atDocumentsDir()),
-                        trailing: Button(action: {
-                        }) {
-                            Image(systemName: "magnifyingglass")
-                        }.disabled(true)
+                        .disabled(atDocumentsDir())
                     )
                 } else {
                     Text("No figures.").font(.headline)
