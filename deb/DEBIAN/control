@@ -1,0 +1,10 @@
+Package: org.ericbetts.CattleGrid
+Name: CattleGrid
+Version: 1.0
+Architecture: iphoneos-arm
+Description: nintendo amiibo ntag writing app source: https://gitlab.com/bettse/cattlegrid
+Maintainer: Arslan Ablikim<https://github.com/arslan2012>
+Author: Eric Betts<https://gitlab.com/bettse>
+Section: Tool
+dev: Eric Betts<https://gitlab.com/bettse>
+Icon: file:///Applications/CattleGrid.app/AppIcon60x60@2x.png

@@ -34,10 +34,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let needTo = url.startAccessingSecurityScopedResource()
         let tagStore = TagStore.shared
         let fm = FileManager.default
+        #if JAILBREAK
+        print("lol")
+        let doc = URL(fileURLWithPath: "/var/mobile/tagbin/", isDirectory: true)
+        let destination = doc.appendingPathComponent(url.lastPathComponent)
+        #else
         let doc = fm.urls(for: .documentDirectory, in: .userDomainMask).first
         guard let destination = doc?.appendingPathComponent(url.lastPathComponent) else {
             return false
         }
+        #endif
+        
 
         print("copy \(url) to \(destination)")
         do {

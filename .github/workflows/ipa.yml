@@ -1,0 +1,25 @@
+name: build ipa
+on:
+    push:
+        branches:
+        - master
+
+jobs:
+    build:
+        runs-on: macOS-latest
+        steps:
+            - name: install dependencies
+              run: brew install ldid dpkg
+            - uses: actions/checkout@v2
+            - name: build
+              run: /usr/bin/xcodebuild -project CattleGrid.xcodeproj -scheme CattleGrid -configuration Release clean archive -archivePath buildArchive/CattleGrid.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENT="" ENTITLEMENTS_REQUIRED=NO
+            - name: export ipa
+              run: |
+                  mkdir -p ipa/Payload
+                  cp -R buildArchive/CattleGrid.xcarchive/Products/Applications/CattleGrid.app ipa/Payload/
+                  cd ipa
+                  /usr/bin/zip -r CattleGrid.ipa Payload
+            - uses: actions/upload-artifact@v2
+              with:
+                  path: ipa/CattleGrid.ipa
+

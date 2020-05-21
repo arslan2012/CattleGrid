@@ -1,0 +1,25 @@
+name: build deb
+on:
+    push:
+        branches:
+        - master
+
+jobs:
+    build:
+        runs-on: macOS-latest
+        steps:
+            - name: install dependencies
+              run: brew install ldid dpkg
+            - uses: actions/checkout@v2
+            - name: build
+              run: /usr/bin/xcodebuild -project CattleGrid.xcodeproj -scheme CattleGrid -configuration Release clean archive -archivePath buildArchive/CattleGrid.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENT="" ENTITLEMENTS_REQUIRED=NO GCC_PREPROCESSOR_DEFINITIONS='$GCC_PREPROCESSOR_DEFINITIONS JAILBREAK=1'
+            - name: inject entitlement with ldid
+              run: ldid -SjailbreakEntitlement.plist buildArchive/CattleGrid.xcarchive/Products/Applications/CattleGrid.app/CattleGrid
+            - name: zip the archive
+              run: |
+                  cp -R buildArchive/CattleGrid.xcarchive/Products/Applications deb/
+                  dpkg -b deb
+            - uses: actions/upload-artifact@v2
+              with:
+                  path: deb.deb
+

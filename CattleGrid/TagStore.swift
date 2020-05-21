@@ -140,7 +140,11 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     }
 
     func getDocumentsDirectory() -> URL {
+        #if JAILBREAK
+        return URL(fileURLWithPath: "/var/mobile/tagbin/", isDirectory: true)
+        #else
         return fm.urls(for: .documentDirectory, in: .userDomainMask).first!
+        #endif
     }
 
     func load(_ amiiboPath: URL) {

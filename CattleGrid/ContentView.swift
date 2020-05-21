@@ -11,13 +11,18 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var tagStore: TagStore
-
+    #if JAILBREAK
+    let warning = "your phone needs to be at least iphone7 or above and iOS 13+ to use this app"
+    #else
+    let warning = "your phone needs to be at least iphone7 or above and iOS 13+ to use this app, or maybe the app's 'entitlements' is not correctly signed"
+    #endif
+    
     var body: some View {
         VStack(alignment: .center) {
             if (tagStore.readingAvailable) {
                 MainScreen(tagStore: _tagStore)
             } else {
-                Text("Either your phone doesn't have NFC, or the app's 'entitlements' aren't correctly signed")
+                Text(warning)
                     .foregroundColor(.red)
                     .font(.largeTitle)
                     .padding()
