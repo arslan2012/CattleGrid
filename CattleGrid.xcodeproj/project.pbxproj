@@ -13,13 +13,13 @@
 		6DC5860E24417199006DA042 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC5860D24417199006DA042 /* SceneDelegate.swift */; };
 		6DC5861024417199006DA042 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC5860F24417199006DA042 /* ContentView.swift */; };
 		6DC58612244171AB006DA042 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6DC58611244171AB006DA042 /* Assets.xcassets */; };
-		6DC58615244171AB006DA042 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6DC58614244171AB006DA042 /* Preview Assets.xcassets */; };
 		6DC58618244171AB006DA042 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6DC58616244171AB006DA042 /* LaunchScreen.storyboard */; };
 		6DC58621244172B2006DA042 /* TagStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC58620244172B2006DA042 /* TagStore.swift */; };
 		6DC58623244178F1006DA042 /* Data+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC58622244178F1006DA042 /* Data+Hex.swift */; };
 		6DD45BC024423FC100C5C925 /* amiitool in Frameworks */ = {isa = PBXBuildFile; productRef = 6DD45BBF24423FC100C5C925 /* amiitool */; };
 		6DD45BC6244383AD00C5C925 /* Amiitool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DD45BC5244383AD00C5C925 /* Amiitool.swift */; };
 		6DD45BC82443BCD300C5C925 /* ViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DD45BC72443BCD300C5C925 /* ViewModifiers.swift */; };
+		F534CA82247B92F60003BD22 /* key_retail.bin in Resources */ = {isa = PBXBuildFile; fileRef = F534CA81247B92F60003BD22 /* key_retail.bin */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,7 +30,6 @@
 		6DC5860D24417199006DA042 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		6DC5860F24417199006DA042 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		6DC58611244171AB006DA042 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		6DC58614244171AB006DA042 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		6DC58617244171AB006DA042 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		6DC58619244171AB006DA042 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6DC5861F2441721B006DA042 /* CattleGrid.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CattleGrid.entitlements; sourceTree = "<group>"; };
@@ -38,6 +37,7 @@
 		6DC58622244178F1006DA042 /* Data+Hex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Data+Hex.swift"; sourceTree = "<group>"; };
 		6DD45BC5244383AD00C5C925 /* Amiitool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Amiitool.swift; sourceTree = "<group>"; };
 		6DD45BC72443BCD300C5C925 /* ViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModifiers.swift; sourceTree = "<group>"; };
+		F534CA81247B92F60003BD22 /* key_retail.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = key_retail.bin; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,6 +71,7 @@
 		6DC5860A24417199006DA042 /* CattleGrid */ = {
 			isa = PBXGroup;
 			children = (
+				F534CA81247B92F60003BD22 /* key_retail.bin */,
 				6D610351244B5E74003B7482 /* DirectoryWatcher.swift */,
 				6DC58622244178F1006DA042 /* Data+Hex.swift */,
 				6DC5861F2441721B006DA042 /* CattleGrid.entitlements */,
@@ -82,19 +83,10 @@
 				6DC58611244171AB006DA042 /* Assets.xcassets */,
 				6DC58616244171AB006DA042 /* LaunchScreen.storyboard */,
 				6DC58619244171AB006DA042 /* Info.plist */,
-				6DC58613244171AB006DA042 /* Preview Content */,
 				6DC58620244172B2006DA042 /* TagStore.swift */,
 				6DD45BC5244383AD00C5C925 /* Amiitool.swift */,
 			);
 			path = CattleGrid;
-			sourceTree = "<group>";
-		};
-		6DC58613244171AB006DA042 /* Preview Content */ = {
-			isa = PBXGroup;
-			children = (
-				6DC58614244171AB006DA042 /* Preview Assets.xcassets */,
-			);
-			path = "Preview Content";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -162,7 +154,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6DC58618244171AB006DA042 /* LaunchScreen.storyboard in Resources */,
-				6DC58615244171AB006DA042 /* Preview Assets.xcassets in Resources */,
+				F534CA82247B92F60003BD22 /* key_retail.bin in Resources */,
 				6DC58612244171AB006DA042 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -320,7 +312,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = CattleGrid/CattleGrid.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_ASSET_PATHS = "\"CattleGrid/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = H9NLRYZLBM;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = CattleGrid/Info.plist;
@@ -344,7 +336,7 @@
 				CODE_SIGN_ENTITLEMENTS = CattleGrid/CattleGrid.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_ASSET_PATHS = "\"CattleGrid/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = H9NLRYZLBM;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = CattleGrid/Info.plist;

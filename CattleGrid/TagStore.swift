@@ -19,9 +19,6 @@ enum MifareCommands : UInt8 {
 
 let NTAG_PAGE_SIZE = 4
 
-let KEY_RETAIL = "key_retail.bin"
-let KEY_RETAIL_SIZE = 160
-
 enum NTAG215Pages : UInt8 {
     case staticLockBits = 2
     case capabilityContainer = 3
@@ -65,22 +62,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
 
     func start() {
         print("Start")
-
-        let key_retail = getDocumentsDirectory().appendingPathComponent(KEY_RETAIL).path
-        if (!fm.fileExists(atPath: key_retail)) {
-            self.error = "\(KEY_RETAIL) missing"
-            return
-        }
-        do {
-            let attr = try fm.attributesOfItem(atPath: key_retail)
-            let fileSize = attr[FileAttributeKey.size] as! UInt64
-            if (fileSize != KEY_RETAIL_SIZE) {
-                self.error = "\(KEY_RETAIL) is not the correct size"
-                return
-            }
-        } catch {
-            print(error)
-            self.error = "Error getting size of \(KEY_RETAIL)"
+        guard let key_retail = Bundle.main.path(forResource: "key_retail", ofType: "bin", inDirectory: nil) else {
             return
         }
 
