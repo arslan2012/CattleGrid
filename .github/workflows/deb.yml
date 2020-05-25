@@ -12,7 +12,7 @@ jobs:
               run: brew install ldid dpkg
             - uses: actions/checkout@v2
             - name: build
-              run: /usr/bin/xcodebuild -project CattleGrid.xcodeproj -scheme CattleGrid -configuration Release clean archive -archivePath buildArchive/CattleGrid.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENT="" ENTITLEMENTS_REQUIRED=NO GCC_PREPROCESSOR_DEFINITIONS='$GCC_PREPROCESSOR_DEFINITIONS JAILBREAK=1'
+              run: /usr/bin/xcodebuild -project CattleGrid.xcodeproj -scheme CattleGrid -configuration Release clean archive -archivePath buildArchive/CattleGrid.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENT="" ENTITLEMENTS_REQUIRED=NO GCC_PREPROCESSOR_DEFINITIONS='$GCC_PREPROCESSOR_DEFINITIONS JAILBREAK'
             - name: inject entitlement with ldid
               run: ldid -SjailbreakEntitlement.plist buildArchive/CattleGrid.xcarchive/Products/Applications/CattleGrid.app/CattleGrid
             - name: zip the archive
