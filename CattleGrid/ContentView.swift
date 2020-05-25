@@ -59,7 +59,7 @@ struct MainScreen: View {
             NavigationView {
                 if (tagStore.amiibos.count > 0) {
                     List(tagStore.amiibos, id:\.path) { amiibo in
-                        Text(amiibo.lastPathComponent).onTapGesture {
+                        Text(amiibo.relativePath).onTapGesture {
                             self.tagStore.load(amiibo)
                         }
                         .foregroundColor(self.selected(amiibo) ? .primary : .secondary)

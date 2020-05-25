@@ -1,5 +1,6 @@
 .*.swp
 .DS_Store
+.idea/
 build/
 xcuserdata/
 CattleGrid.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/

@@ -94,11 +94,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
                 return
             }
 
-            watcher.onNewFiles = { newFiles in
-              self.loadList()
-            }
-
-            watcher.onDeletedFiles = { deletedFiles in
+            watcher.onFilesChanged = {
               self.loadList()
             }
         }
@@ -122,21 +118,19 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     }
 
     func loadList() {
-        do {
-            let items = try fm.contentsOfDirectory(at: getDocumentsDirectory(), includingPropertiesForKeys: [], options: [.skipsHiddenFiles, .skipsPackageDescendants, .skipsSubdirectoryDescendants])
-            let sortedItems = items.sorted(by: { $0.lastPathComponent < $1.lastPathComponent})
-            amiibos = sortedItems.filter({ (item) -> Bool in
-                do {
-                    let isDir = (try item.resourceValues(forKeys: [.isDirectoryKey])).isDirectory ?? false
-                    let isKeyRetail = item.lastPathComponent == KEY_RETAIL
-                    return !isDir && !isKeyRetail
-                } catch {
-                    return false
-                }
-            })
-        } catch {
-            // failed to read directory – bad permissions, perhaps?
+        let dirEnumerator = fm.enumerator(at: getDocumentsDirectory(), includingPropertiesForKeys: nil, options: [.includesDirectoriesPostOrder, .producesRelativePathURLs])!
+        var fileURLs: [URL] = []
+        for case let fileURL as URL in dirEnumerator {
+            guard let resourceValues = try? fileURL.resourceValues(forKeys: [.isDirectoryKey]),
+                let isDirectory = resourceValues.isDirectory
+                else {
+                    continue
+            }
+            if (!isDirectory) {
+                fileURLs.append(fileURL)
+            }
         }
+        amiibos = fileURLs.sorted(by: { $0.relativePath < $1.relativePath})
     }
 
     func getDocumentsDirectory() -> URL {
