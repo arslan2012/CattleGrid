@@ -48,20 +48,21 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     @Published private(set) var progress: Float = 0
     @Published private(set) var error: String = ""
     @Published private(set) var readingAvailable: Bool = NFCReaderSession.readingAvailable
+    #if JAILBREAK
+    @Published private(set) var currentDir: URL = URL(fileURLWithPath: "/var/mobile/tagbin/", isDirectory: true)
+    let documents = URL(fileURLWithPath: "/var/mobile/tagbin/", isDirectory: true)
+    #else
     @Published private(set) var currentDir: URL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+    let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+    #endif
+
+    let fm = FileManager.default
 
     var lastPageWritten: UInt8 = 0 {
         willSet(newVal) {
             self.progress = Float(newVal) / Float(NTAG215Pages.total.rawValue)
         }
     }
-
-    let fm = FileManager.default
-    #if JAILBREAK
-    let documents = URL(fileURLWithPath: "/var/mobile/tagbin/", isDirectory: true)
-    #else
-    let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-    #endif
 
     var amiitool: Amiitool?
     var plain: Data = Data()

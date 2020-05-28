@@ -19,14 +19,14 @@ struct ContentView: View {
 
     var body: some View {
         VStack(alignment: .center) {
-//            if (tagStore.readingAvailable) {
+            if (tagStore.readingAvailable) {
             MainScreen(tagStore: _tagStore)
-//            } else {
-//                Text(warning)
-//                    .foregroundColor(.red)
-//                    .font(.largeTitle)
-//                    .padding()
-//            }
+            } else {
+                Text(warning)
+                    .foregroundColor(.red)
+                    .font(.largeTitle)
+                    .padding()
+            }
         }
     }
 }
@@ -38,7 +38,6 @@ struct ContentView_Previews: PreviewProvider {
 }
 
 struct MainScreen: View {
-    let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
     @EnvironmentObject var tagStore: TagStore
     @State private var searchText: String = ""
 
@@ -115,17 +114,17 @@ struct MainScreen: View {
     }
 
     func filtered(_ urls: [URL]) -> [URL] {
-        return urls.filter {
+        urls.filter {
             self.searchText.isEmpty ? true : $0.lastPathComponent.contains(self.searchText)
         }
     }
 
     func selected(_ file: URL) -> Bool {
-        return (file.lastPathComponent == self.tagStore.selected?.lastPathComponent)
+        file.lastPathComponent == self.tagStore.selected?.lastPathComponent
     }
 
     func atDocumentsDir() -> Bool {
-        return tagStore.currentDir.standardizedFileURL == self.documents.standardizedFileURL
+        tagStore.currentDir.standardizedFileURL == self.tagStore.documents.standardizedFileURL
     }
 
     func title() -> String {
