@@ -10,12 +10,14 @@ import Foundation
 
 extension Data {
     var hexDescription: String {
-        return reduce("") {$0 + String(format: "%02x", $1)}
+        return reduce("") {
+            $0 + String(format: "%02x", $1)
+        }
     }
 
     init(hex: String) {
         let hexArray = hex.trimmingCharacters(in: NSCharacterSet.whitespaces).components(separatedBy: " ")
-        let hexBytes : [UInt8] = hexArray.map({UInt8($0, radix: 0x10)!})
+        let hexBytes: [UInt8] = hexArray.map({ UInt8($0, radix: 0x10)! })
         self.init(hexBytes)
     }
 }

@@ -19,6 +19,7 @@
 		6DD45BC024423FC100C5C925 /* amiitool in Frameworks */ = {isa = PBXBuildFile; productRef = 6DD45BBF24423FC100C5C925 /* amiitool */; };
 		6DD45BC6244383AD00C5C925 /* Amiitool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DD45BC5244383AD00C5C925 /* Amiitool.swift */; };
 		6DD45BC82443BCD300C5C925 /* ViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DD45BC72443BCD300C5C925 /* ViewModifiers.swift */; };
+		F533430F247F89C400AA4C6B /* Data+page.swift in Sources */ = {isa = PBXBuildFile; fileRef = F533430E247F89C300AA4C6B /* Data+page.swift */; };
 		F534CA82247B92F60003BD22 /* key_retail.bin in Resources */ = {isa = PBXBuildFile; fileRef = F534CA81247B92F60003BD22 /* key_retail.bin */; };
 /* End PBXBuildFile section */
 
@@ -37,6 +38,7 @@
 		6DC58622244178F1006DA042 /* Data+Hex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Data+Hex.swift"; sourceTree = "<group>"; };
 		6DD45BC5244383AD00C5C925 /* Amiitool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Amiitool.swift; sourceTree = "<group>"; };
 		6DD45BC72443BCD300C5C925 /* ViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModifiers.swift; sourceTree = "<group>"; };
+		F533430E247F89C300AA4C6B /* Data+page.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Data+page.swift"; sourceTree = "<group>"; };
 		F534CA81247B92F60003BD22 /* key_retail.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = key_retail.bin; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -74,6 +76,7 @@
 				F534CA81247B92F60003BD22 /* key_retail.bin */,
 				6D610351244B5E74003B7482 /* DirectoryWatcher.swift */,
 				6DC58622244178F1006DA042 /* Data+Hex.swift */,
+				F533430E247F89C300AA4C6B /* Data+page.swift */,
 				6DC5861F2441721B006DA042 /* CattleGrid.entitlements */,
 				6DC5860B24417199006DA042 /* AppDelegate.swift */,
 				6DC5860D24417199006DA042 /* SceneDelegate.swift */,
@@ -170,6 +173,7 @@
 				6DC5860C24417199006DA042 /* AppDelegate.swift in Sources */,
 				6DC58623244178F1006DA042 /* Data+Hex.swift in Sources */,
 				6DD45BC82443BCD300C5C925 /* ViewModifiers.swift in Sources */,
+				F533430F247F89C400AA4C6B /* Data+page.swift in Sources */,
 				6DC5860E24417199006DA042 /* SceneDelegate.swift in Sources */,
 				6DC58621244172B2006DA042 /* TagStore.swift in Sources */,
 				6D843CAC244578180014C4FC /* ProgressBar.swift in Sources */,

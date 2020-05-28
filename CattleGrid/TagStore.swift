@@ -11,7 +11,7 @@ import SwiftUI
 import CoreNFC
 import amiitool
 
-enum MifareCommands : UInt8 {
+enum MifareCommands: UInt8 {
     case READ = 0x30
     case WRITE = 0xA2
     case PWD_AUTH = 0x1B
@@ -19,7 +19,7 @@ enum MifareCommands : UInt8 {
 
 let NTAG_PAGE_SIZE = 4
 
-enum NTAG215Pages : UInt8 {
+enum NTAG215Pages: UInt8 {
     case staticLockBits = 2
     case capabilityContainer = 3
     case userMemoryFirst = 4
@@ -41,27 +41,36 @@ let CFG0 = Data([0x00, 0x00, 0x00, 0x04])
 let CFG1 = Data([0x5f, 0x00, 0x00, 0x00])
 let PACKRFUI = Data([0x80, 0x80, 0x00, 0x00])
 
-class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
+class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     static let shared = TagStore()
-    @Published private(set) var amiibos: [URL] = []
+    @Published private(set) var files: [URL] = []
     @Published private(set) var selected: URL?
-    @Published private(set) var progress : Float = 0
-    @Published private(set) var error : String = ""
-    @Published private(set) var readingAvailable : Bool = NFCReaderSession.readingAvailable
+    @Published private(set) var progress: Float = 0
+    @Published private(set) var error: String = ""
+    @Published private(set) var readingAvailable: Bool = NFCReaderSession.readingAvailable
+    @Published private(set) var currentDir: URL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
 
-    var lastPageWritten : UInt8 = 0 {
+    var lastPageWritten: UInt8 = 0 {
         willSet(newVal) {
             self.progress = Float(newVal) / Float(NTAG215Pages.total.rawValue)
         }
     }
 
     let fm = FileManager.default
-    var amiitool : Amiitool?
-    var plain : Data = Data()
-    var watcher : DirectoryWatcher? = nil
+    #if JAILBREAK
+    let documents = URL(fileURLWithPath: "/var/mobile/tagbin/", isDirectory: true)
+    #else
+    let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+    #endif
+
+    var amiitool: Amiitool?
+    var plain: Data = Data()
+    var watcher: DirectoryWatcher? = nil
+
 
     func start() {
         print("Start")
+        print(documents)
         guard let key_retail = Bundle.main.path(forResource: "key_retail", ofType: "bin", inDirectory: nil) else {
             return
         }
@@ -71,13 +80,17 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         self.loadList()
 
         if self.watcher == nil {
-            self.watcher = DirectoryWatcher.watch(getDocumentsDirectory())
+            self.watcher = DirectoryWatcher.watch(self.documents)
             guard let watcher = watcher else {
                 return
             }
 
-            watcher.onFilesChanged = {
-              self.loadList()
+            watcher.onNewFiles = { newFiles in
+                self.loadList()
+            }
+
+            watcher.onDeletedFiles = { deletedFiles in
+                self.loadList()
             }
         }
         guard let watcher = self.watcher else {
@@ -100,47 +113,50 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     }
 
     func loadList() {
-        let dirEnumerator = fm.enumerator(at: getDocumentsDirectory(), includingPropertiesForKeys: nil, options: [.includesDirectoriesPostOrder, .producesRelativePathURLs])!
-        var fileURLs: [URL] = []
-        for case let fileURL as URL in dirEnumerator {
-            guard let resourceValues = try? fileURL.resourceValues(forKeys: [.isDirectoryKey]),
-                let isDirectory = resourceValues.isDirectory
-                else {
-                    continue
-            }
-            if (!isDirectory) {
-                fileURLs.append(fileURL)
-            }
-        }
-        amiibos = fileURLs.sorted(by: { $0.relativePath < $1.relativePath})
+        let items = try? fm.contentsOfDirectory(at: self.currentDir, includingPropertiesForKeys: [], options: [.skipsHiddenFiles, .skipsPackageDescendants, .skipsSubdirectoryDescendants])
+        files = items!.filter({ (item) -> Bool in
+            let isDir = (try? item.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
+            return isDir || (item.pathExtension == "bin")
+        }).sorted(by: { $0.lastPathComponent < $1.lastPathComponent })
     }
 
-    func getDocumentsDirectory() -> URL {
-        #if JAILBREAK
-        return URL(fileURLWithPath: "/var/mobile/tagbin/", isDirectory: true)
-        #else
-        return fm.urls(for: .documentDirectory, in: .userDomainMask).first!
-        #endif
-    }
-
-    func load(_ amiiboPath: URL) {
+    func load(_ path: URL) {
         do {
-            let tag = try Data(contentsOf: amiiboPath)
-            guard let amiitool = self.amiitool else {
-                self.error = "Internal error: amiitool not initialized"
-                return
+            let isDir = (try path.resourceValues(forKeys: [.isDirectoryKey])).isDirectory ?? false
+            if (isDir) {
+                loadFolder(path)
+            } else {
+                loadFile(path)
             }
+        } catch {
+            print("Couldn't read \(path)")
+        }
+    }
+
+    func loadFolder(_ path: URL) {
+        self.currentDir = path;
+        self.loadList()
+    }
+
+    func loadFile(_ path: URL) {
+        guard let amiitool = self.amiitool else {
+            self.error = "Internal error: amiitool not initialized"
+            return
+        }
+
+        do {
+            let tag = try Data(contentsOf: path)
 
             let start = NTAG_PAGE_SIZE * Int(NTAG215Pages.characterModelHead.rawValue)
-            let end = NTAG_PAGE_SIZE * Int(NTAG215Pages.characterModelTail.rawValue+1)
+            let end = NTAG_PAGE_SIZE * Int(NTAG215Pages.characterModelTail.rawValue + 1)
             let id = tag.subdata(in: start..<end)
             print("character id: \(id.hexDescription)")
 
             plain = amiitool.unpack(tag)
-            print("\(amiiboPath.lastPathComponent) loaded")
-            self.selected = amiiboPath
+            print("\(path.lastPathComponent) loaded")
+            self.selected = path
         } catch {
-            print("Couldn't read \(amiiboPath)")
+            self.error = "Couldn't read \(path)"
         }
     }
 
@@ -160,6 +176,17 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
 
     func tagReaderSession(_ session: NFCTagReaderSession, didInvalidateWithError error: Error) {
         print("didInvalidateWithError: \(error.localizedDescription)")
+
+        if (error.localizedDescription == "Session timeout") {
+            return
+        }
+        if (error.localizedDescription == "Session invalidated by user") {
+            return
+        }
+        DispatchQueue.main.async {
+            self.error = "Error during session: \(error.localizedDescription)"
+            self.lastPageWritten = 0
+        }
     }
 
     func tagReaderSession(_ session: NFCTagReaderSession, didDetect tags: [NFCTag]) {
@@ -199,6 +226,35 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
                 return
             }
 
+            guard data.count == 16 else {
+                print("Incorrect data size: \(data.hexDescription)")
+                DispatchQueue.main.async {
+                    self.error = "Couldn't read tag UID"
+                    self.lastPageWritten = 0
+                }
+                session.invalidate()
+                return
+            }
+            let cc = data.subdata(in: 12..<16)
+            let size = cc[2];
+            if (size == 0x12) {
+                DispatchQueue.main.async {
+                    self.error = "NTAG213"
+                }
+                session.invalidate()
+                return
+            } else if (size == 0x6D) {
+                DispatchQueue.main.async {
+                    self.error = "NTAG216"
+                }
+                session.invalidate()
+                return
+            } else if (size == 0x3E) {
+                //NTAG215
+            } else {
+                print("Unexpected size from CC: \(size)")
+            }
+
             guard let amiitool = self.amiitool else {
                 DispatchQueue.main.async {
                     self.error = "Internal error: amiitool not initialized"
@@ -207,7 +263,6 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             }
 
             //Amiitool plain text stores first 2 pages (uid) towards the end
-            //TODO: is uid even used in encryption/signing?
             self.plain.replaceSubrange(468..<476, with: data.subdata(in: 0..<8))
 
             let modified = amiitool.pack(self.plain)
@@ -250,9 +305,9 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             return
         }
 
-        let page = data.subdata(in: Int(startPage) * 4 ..< Int(startPage) * 4 + 4)
+        let page = data.page(startPage)
         writePage(tag, page: startPage, data: page) {
-            self.writeUserPages(tag, startPage: startPage+1, data: data) { () in
+            self.writeUserPages(tag, startPage: startPage + 1, data: data) { () in
                 completionHandler()
             }
         }
@@ -293,7 +348,7 @@ class TagStore : NSObject, ObservableObject, NFCTagReaderSessionDelegate {
                 print(error as Any)
                 return
             }
-            self.readAllPages(tag, startPage: startPage+4) { (contents) in
+            self.readAllPages(tag, startPage: startPage + 4) { (contents) in
                 completionHandler(data + contents)
             }
         }

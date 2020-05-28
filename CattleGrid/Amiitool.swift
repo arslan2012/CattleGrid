@@ -12,9 +12,9 @@ import amiitool
 let NTAG215_SIZE = 540
 
 struct Amiitool {
-    var amiiboKeys : UnsafeMutablePointer<nfc3d_amiibo_keys> = UnsafeMutablePointer<nfc3d_amiibo_keys>.allocate(capacity: 1)
+    var amiiboKeys: UnsafeMutablePointer<nfc3d_amiibo_keys> = UnsafeMutablePointer<nfc3d_amiibo_keys>.allocate(capacity: 1)
 
-    init(path: String){
+    init(path: String) {
         if (!nfc3d_amiibo_load_keys(amiiboKeys, path)) {
             print("Could not load keys from \(path)")
         }
@@ -41,8 +41,10 @@ struct Amiitool {
 }
 
 extension Data {
-    var unsafeBytes : UnsafePointer<UInt8> {
-        return self.withUnsafeBytes { return $0 }
+    var unsafeBytes: UnsafePointer<UInt8> {
+        self.withUnsafeBytes {
+            $0
+        }
     }
 }
 
