@@ -123,6 +123,8 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     
     func load(_ path: URL) {
         do {
+            clearSelected()
+
             let isDir = (try path.resourceValues(forKeys: [.isDirectoryKey])).isDirectory ?? false
             if (isDir) {
                 loadFolder(path)
@@ -159,6 +161,11 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         } catch {
             self.error = "Couldn't read \(path)"
         }
+    }
+    
+    func clearSelected() {
+        self.selected = nil
+        self.error = ""
     }
     
     func scan() {

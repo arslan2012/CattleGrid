@@ -18,20 +18,20 @@ struct ContentView: View {
 #endif
     
     var body: some View {
-        VStack(alignment: .center) {
 #if targetEnvironment(simulator)
-            MainScreen(tagStore: _tagStore)
+        MainScreen(tagStore: _tagStore)
 #else
-            if (tagStore.readingAvailable) {
-                MainScreen(tagStore: _tagStore)
-            } else {
+        if (tagStore.readingAvailable) {
+            MainScreen(tagStore: _tagStore)
+        } else {
+            VStack(alignment: .center) {
                 Text(warning)
                     .foregroundColor(.red)
                     .font(.largeTitle)
                     .padding()
             }
-#endif
         }
+#endif
     }
 }
 
@@ -46,66 +46,77 @@ struct MainScreen: View {
     @State private var searchText: String = ""
     
     var body: some View {
-        VStack(alignment: .center) {
-            if self.tagStore.lastPageWritten > 0 {
-                HStack {
-                    ProgressBar(value: tagStore.progress).frame(height: 20)
-                    Text("\(tagStore.progress * 100, specifier: "%.2f")%")
-                        .font(.subheadline)
+        
+        //File selector
+        NavigationView {
+            VStack() {
+                
+                VStack {
+                    if self.tagStore.lastPageWritten > 0 {
+                        HStack {
+                            ProgressBar(value: tagStore.progress).frame(height: 20)
+                            Text("\(tagStore.progress * 100, specifier: "%.2f")%")
+                                .font(.subheadline)
+                        }
+                    }
+                    if self.tagStore.error != "" {
+                        Text(self.tagStore.error)
+                            .font(.subheadline)
+                            .foregroundColor(.red)
+                    }
                 }
-            }
-            if self.tagStore.error != "" {
-                Text(self.tagStore.error)
-                    .font(.subheadline)
-                    .foregroundColor(.red)
-            }
-            //File selector
-            NavigationView {
+                .frame(maxWidth: .infinity, minHeight: 50)
+                
                 Group {
                     if (tagStore.files.count > 0) {
                         List(tagStore.files, id: \.path) { file in
                             ListElement(name: file.deletingPathExtension().lastPathComponent, selected: self.selected(file), isFile: (file.pathExtension == "bin"), cb: {
                                 self.tagStore.load(file)
                             })
-                        }
+                        }.listStyle(PlainListStyle())
                     } else {
-                        Text("No figures.").font(.headline)
+                        Spacer()
+                        Text("No figures").font(.headline)
+                        Spacer()
                     }
                 }
-                .navigationBarTitle(Text(title()), displayMode: .inline)
-                .navigationBarItems(
-                    leading: Button(action: {
-                        self.tagStore.load(self.tagStore.currentDir.deletingLastPathComponent())
-                    }) {
-                        Image(systemName: "chevron.left")
-                        Text("Back")
+                
+                VStack {
+                    //button to say 'go'
+                    Button(action: self.tagStore.scan) {
+                        Image(systemName: "arrow.down.doc")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 100, height: 100)
+                            .disabled(self.tagStore.selected == nil)
+                            .padding()
                     }
-                        .disabled(atDocumentsDir())
-                        .opacity(atDocumentsDir() ? 0 : 1)
-                )
+                    .disabled(self.tagStore.selected == nil)
+                    Text("© Eric Betts 2020")
+                        .font(.footnote)
+                        .fontWeight(.light)
+                }
+                .padding(.bottom, 20)
+                .frame(maxWidth: .infinity)
+                .background(Color("BarColor"))
             }
+            .edgesIgnoringSafeArea(.bottom)
+            .navigationBarTitle(Text(title()), displayMode: .inline)
+            .navigationBarItems(
+                leading: Button(action: {
+                    self.tagStore.clearSelected()
+                    self.tagStore.load(self.tagStore.currentDir.deletingLastPathComponent())
+                }) {
+                    Image(systemName: "chevron.left")
+                    Text("Back")
+                }
+                    .disabled(atDocumentsDir())
+                    .opacity(atDocumentsDir() ? 0 : 1)
+            )
             .onAppear(perform: self.tagStore.start)
             .onDisappear(perform: self.tagStore.stop)
-            .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(Color.accentColor, lineWidth: 0.3)
-            )
             
-            //button to say 'go'
-            Button(action: self.tagStore.scan) {
-                Image(systemName: "arrow.down.doc")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 100, height: 100)
-                    .disabled(self.tagStore.selected == nil)
-                    .padding()
-            }
-            .disabled(self.tagStore.selected == nil)
-            Text("© Eric Betts 2020")
-                .font(.footnote)
-                .fontWeight(.light)
         }
-        .padding()
     }
     
     func filtered(_ urls: [URL]) -> [URL] {
@@ -142,10 +153,8 @@ struct ListElement: View {
             if (isFile) {
                 HStack {
                     Text(name)
-                        .foregroundColor(selected ? .primary : .secondary)
-                    
                     Spacer()
-                    Image(systemName: "checkmark.circle").isHidden(!selected).padding(.trailing)
+                    Image(systemName: "checkmark").isHidden(!selected).padding(.trailing)
                 }
                 .contentShape(Rectangle())
                 .frame(maxWidth: .infinity)
@@ -153,11 +162,11 @@ struct ListElement: View {
             } else { // Folder
                 HStack {
                     Text(name)
-                    Text("")
-                        .frame(maxWidth: .infinity)
-                        .background(Color(UIColor.systemBackground)) //'invisible' tappable target
+                    Spacer()
                     Image(systemName: "chevron.right")
                 }
+                .contentShape(Rectangle())
+                .frame(maxWidth: .infinity)
                 .onTapGesture(perform: cb)
             }
         }
