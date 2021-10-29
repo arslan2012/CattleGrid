@@ -19,6 +19,9 @@ struct ContentView: View {
     
     var body: some View {
         VStack(alignment: .center) {
+#if targetEnvironment(simulator)
+            MainScreen(tagStore: _tagStore)
+#else
             if (tagStore.readingAvailable) {
                 MainScreen(tagStore: _tagStore)
             } else {
@@ -27,6 +30,7 @@ struct ContentView: View {
                     .font(.largeTitle)
                     .padding()
             }
+#endif
         }
     }
 }
@@ -57,37 +61,28 @@ struct MainScreen: View {
             }
             //File selector
             NavigationView {
-                if (tagStore.files.count > 0) {
-                    List(tagStore.files, id: \.path) { file in
-                        ListElement(name: file.deletingPathExtension().lastPathComponent, selected: self.selected(file), isFile: (file.pathExtension == "bin"), cb: {
-                            self.tagStore.load(file)
-                        })
-                    }
-                    .navigationBarTitle(Text(title()), displayMode: .inline)
-                    .navigationBarItems(
-                        leading: Button(action: {
-                            self.tagStore.load(self.tagStore.currentDir.deletingLastPathComponent())
-                        }) {
-                            Image(systemName: "chevron.left")
-                            Text("Back")
+                Group {
+                    if (tagStore.files.count > 0) {
+                        List(tagStore.files, id: \.path) { file in
+                            ListElement(name: file.deletingPathExtension().lastPathComponent, selected: self.selected(file), isFile: (file.pathExtension == "bin"), cb: {
+                                self.tagStore.load(file)
+                            })
                         }
-                            .disabled(atDocumentsDir())
-                            .opacity(atDocumentsDir() ? 0 : 1)
-                    )
-                } else {
-                    Text("No figures.").font(.headline)
-                        .navigationBarTitle(Text(title()), displayMode: .inline)
-                        .navigationBarItems(
-                            leading: Button(action: {
-                                self.tagStore.load(self.tagStore.currentDir.deletingLastPathComponent())
-                            }) {
-                                Image(systemName: "chevron.left")
-                                Text("Back")
-                            }
-                                .disabled(atDocumentsDir())
-                                .opacity(atDocumentsDir() ? 0 : 1)
-                        )
+                    } else {
+                        Text("No figures.").font(.headline)
+                    }
                 }
+                .navigationBarTitle(Text(title()), displayMode: .inline)
+                .navigationBarItems(
+                    leading: Button(action: {
+                        self.tagStore.load(self.tagStore.currentDir.deletingLastPathComponent())
+                    }) {
+                        Image(systemName: "chevron.left")
+                        Text("Back")
+                    }
+                        .disabled(atDocumentsDir())
+                        .opacity(atDocumentsDir() ? 0 : 1)
+                )
             }
             .onAppear(perform: self.tagStore.start)
             .onDisappear(perform: self.tagStore.stop)

@@ -48,48 +48,48 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     @Published private(set) var progress: Float = 0
     @Published private(set) var error: String = ""
     @Published private(set) var readingAvailable: Bool = NFCReaderSession.readingAvailable
-    #if JAILBREAK
+#if JAILBREAK
     @Published private(set) var currentDir: URL = URL(fileURLWithPath: "/var/mobile/tagbin/", isDirectory: true)
     let documents = URL(fileURLWithPath: "/var/mobile/tagbin/", isDirectory: true)
-    #else
+#else
     @Published private(set) var currentDir: URL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
     let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-    #endif
-
+#endif
+    
     let fm = FileManager.default
-
+    
     var lastPageWritten: UInt8 = 0 {
         willSet(newVal) {
             self.progress = Float(newVal) / Float(NTAG215Pages.total.rawValue)
         }
     }
-
+    
     var amiitool: Amiitool?
     var plain: Data = Data()
     var watcher: DirectoryWatcher? = nil
-
-
+    
+    
     func start() {
         print("Start")
         print(documents)
         guard let key_retail = Bundle.main.path(forResource: "key_retail", ofType: "bin", inDirectory: nil) else {
             return
         }
-
+        
         self.amiitool = Amiitool(path: key_retail)
-
+        
         self.loadList()
-
+        
         if self.watcher == nil {
             self.watcher = DirectoryWatcher.watch(self.documents)
             guard let watcher = watcher else {
                 return
             }
-
+            
             watcher.onNewFiles = { newFiles in
                 self.loadList()
             }
-
+            
             watcher.onDeletedFiles = { deletedFiles in
                 self.loadList()
             }
@@ -102,7 +102,7 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             print("Documents watching started")
         }
     }
-
+    
     func stop() {
         guard let watcher = self.watcher else {
             print("self.watcher not defined")
@@ -112,7 +112,7 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             print("Documents watching paused")
         }
     }
-
+    
     func loadList() {
         let items = try? fm.contentsOfDirectory(at: self.currentDir, includingPropertiesForKeys: [], options: [.skipsHiddenFiles, .skipsPackageDescendants, .skipsSubdirectoryDescendants])
         files = items!.filter({ (item) -> Bool in
@@ -120,7 +120,7 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             return isDir || (item.pathExtension == "bin")
         }).sorted(by: { $0.lastPathComponent < $1.lastPathComponent })
     }
-
+    
     func load(_ path: URL) {
         do {
             let isDir = (try path.resourceValues(forKeys: [.isDirectoryKey])).isDirectory ?? false
@@ -133,26 +133,26 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             print("Couldn't read \(path)")
         }
     }
-
+    
     func loadFolder(_ path: URL) {
         self.currentDir = path;
         self.loadList()
     }
-
+    
     func loadFile(_ path: URL) {
         guard let amiitool = self.amiitool else {
             self.error = "Internal error: amiitool not initialized"
             return
         }
-
+        
         do {
             let tag = try Data(contentsOf: path)
-
+            
             let start = NTAG_PAGE_SIZE * Int(NTAG215Pages.characterModelHead.rawValue)
             let end = NTAG_PAGE_SIZE * Int(NTAG215Pages.characterModelTail.rawValue + 1)
             let id = tag.subdata(in: start..<end)
             print("character id: \(id.hexDescription)")
-
+            
             plain = amiitool.unpack(tag)
             print("\(path.lastPathComponent) loaded")
             self.selected = path
@@ -160,24 +160,28 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             self.error = "Couldn't read \(path)"
         }
     }
-
+    
     func scan() {
         print("Scan")
         self.error = ""
-
+        
+#if targetEnvironment(simulator)
+        self.error = "Unable to scan in simulator"
+#else
         if let session = NFCTagReaderSession(pollingOption: [.iso14443], delegate: self, queue: nil) {
             session.alertMessage = "Hold your device near a tag to write."
             session.begin()
         }
+#endif
     }
-
+    
     func tagReaderSessionDidBecomeActive(_ session: NFCTagReaderSession) {
         print("reader active \(session)")
     }
-
+    
     func tagReaderSession(_ session: NFCTagReaderSession, didInvalidateWithError error: Error) {
         print("didInvalidateWithError: \(error.localizedDescription)")
-
+        
         if (error.localizedDescription == "Session timeout") {
             return
         }
@@ -189,10 +193,10 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             self.lastPageWritten = 0
         }
     }
-
+    
     func tagReaderSession(_ session: NFCTagReaderSession, didDetect tags: [NFCTag]) {
         print("didDetect: \(tags)")
-
+        
         if case let NFCTag.miFare(tag) = tags.first! {
             session.connect(to: tags.first!) { (error: Error?) in
                 if ((error) != nil) {
@@ -203,7 +207,7 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
                     }
                     return
                 }
-
+                
                 self.connected(tag, session: session)
             }
         } else {
@@ -213,7 +217,7 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             }
         }
     }
-
+    
     func connected(_ tag: NFCMiFareTag, session: NFCTagReaderSession) {
         let read = Data([MifareCommands.READ.rawValue, 0])
         tag.sendMiFareCommand(commandPacket: read) { (data, error) in
@@ -226,7 +230,7 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
                 session.invalidate()
                 return
             }
-
+            
             guard data.count == 16 else {
                 print("Incorrect data size: \(data.hexDescription)")
                 DispatchQueue.main.async {
@@ -255,17 +259,17 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             } else {
                 print("Unexpected size from CC: \(size)")
             }
-
+            
             guard let amiitool = self.amiitool else {
                 DispatchQueue.main.async {
                     self.error = "Internal error: amiitool not initialized"
                 }
                 return
             }
-
+            
             //Amiitool plain text stores first 2 pages (uid) towards the end
             self.plain.replaceSubrange(468..<476, with: data.subdata(in: 0..<8))
-
+            
             let modified = amiitool.pack(self.plain)
             self.writeTag(tag, newImage: modified) { () in
                 print("done writing")
@@ -277,7 +281,7 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             }
         }
     }
-
+    
     func writeTag(_ tag: NFCMiFareTag, newImage: Data, completionHandler: @escaping () -> Void) {
         self.writeUserPages(tag, startPage: NTAG215Pages.userMemoryFirst.rawValue, data: newImage) { () in
             let pwd = self.calculatePWD(tag.identifier)
@@ -299,13 +303,13 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             }
         }
     }
-
+    
     func writeUserPages(_ tag: NFCMiFareTag, startPage: UInt8, data: Data, completionHandler: @escaping () -> Void) {
         if (startPage > NTAG215Pages.userMemoryLast.rawValue) {
             completionHandler()
             return
         }
-
+        
         let page = data.page(startPage)
         writePage(tag, page: startPage, data: page) {
             self.writeUserPages(tag, startPage: startPage + 1, data: data) { () in
@@ -313,7 +317,7 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             }
         }
     }
-
+    
     func writePage(_ tag: NFCMiFareTag, page: UInt8, data: Data, completionHandler: @escaping () -> Void) {
         print("Write page \(page) \(data.hexDescription)")
         let write = Data([MifareCommands.WRITE.rawValue, page]) + data
@@ -332,11 +336,11 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             completionHandler()
         }
     }
-
+    
     func dumpTag(_ tag: NFCMiFareTag, completionHandler: @escaping (Data) -> Void) {
         self.readAllPages(tag, startPage: 0, completionHandler: completionHandler)
     }
-
+    
     func readAllPages(_ tag: NFCMiFareTag, startPage: UInt8, completionHandler: @escaping (Data) -> Void) {
         if (startPage >= NTAG215Pages.total.rawValue) {
             completionHandler(Data())
@@ -354,7 +358,7 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             }
         }
     }
-
+    
     func calculatePWD(_ uid: Data) -> Data {
         var PWD = Data(count: 4)
         PWD[0] = uid[1] ^ uid[3] ^ 0xAA
