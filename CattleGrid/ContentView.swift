@@ -11,16 +11,16 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var tagStore: TagStore
-    #if JAILBREAK
+#if JAILBREAK
     let warning = "your phone needs to be at least iphone7 or above and iOS 13+ to use this app"
-    #else
+#else
     let warning = "your phone needs to be at least iphone7 or above and iOS 13+ to use this app, or maybe the app's 'entitlements' is not correctly signed"
-    #endif
-
+#endif
+    
     var body: some View {
         VStack(alignment: .center) {
             if (tagStore.readingAvailable) {
-            MainScreen(tagStore: _tagStore)
+                MainScreen(tagStore: _tagStore)
             } else {
                 Text(warning)
                     .foregroundColor(.red)
@@ -40,20 +40,20 @@ struct ContentView_Previews: PreviewProvider {
 struct MainScreen: View {
     @EnvironmentObject var tagStore: TagStore
     @State private var searchText: String = ""
-
+    
     var body: some View {
         VStack(alignment: .center) {
             if self.tagStore.lastPageWritten > 0 {
                 HStack {
                     ProgressBar(value: tagStore.progress).frame(height: 20)
                     Text("\(tagStore.progress * 100, specifier: "%.2f")%")
-                            .font(.subheadline)
+                        .font(.subheadline)
                 }
             }
             if self.tagStore.error != "" {
                 Text(self.tagStore.error)
-                        .font(.subheadline)
-                        .foregroundColor(.red)
+                    .font(.subheadline)
+                    .foregroundColor(.red)
             }
             //File selector
             NavigationView {
@@ -63,70 +63,70 @@ struct MainScreen: View {
                             self.tagStore.load(file)
                         })
                     }
-                            .navigationBarTitle(Text(title()), displayMode: .inline)
-                            .navigationBarItems(
-                                    leading: Button(action: {
-                                        self.tagStore.load(self.tagStore.currentDir.deletingLastPathComponent())
-                                    }) {
-                                        Image(systemName: "chevron.left")
-                                        Text("Back")
-                                    }
-                                            .disabled(atDocumentsDir())
-                                            .opacity(atDocumentsDir() ? 0 : 1)
-                            )
+                    .navigationBarTitle(Text(title()), displayMode: .inline)
+                    .navigationBarItems(
+                        leading: Button(action: {
+                            self.tagStore.load(self.tagStore.currentDir.deletingLastPathComponent())
+                        }) {
+                            Image(systemName: "chevron.left")
+                            Text("Back")
+                        }
+                            .disabled(atDocumentsDir())
+                            .opacity(atDocumentsDir() ? 0 : 1)
+                    )
                 } else {
                     Text("No figures.").font(.headline)
-                            .navigationBarTitle(Text(title()), displayMode: .inline)
-                            .navigationBarItems(
-                                    leading: Button(action: {
-                                        self.tagStore.load(self.tagStore.currentDir.deletingLastPathComponent())
-                                    }) {
-                                        Image(systemName: "chevron.left")
-                                        Text("Back")
-                                    }
-                                            .disabled(atDocumentsDir())
-                                            .opacity(atDocumentsDir() ? 0 : 1)
-                            )
+                        .navigationBarTitle(Text(title()), displayMode: .inline)
+                        .navigationBarItems(
+                            leading: Button(action: {
+                                self.tagStore.load(self.tagStore.currentDir.deletingLastPathComponent())
+                            }) {
+                                Image(systemName: "chevron.left")
+                                Text("Back")
+                            }
+                                .disabled(atDocumentsDir())
+                                .opacity(atDocumentsDir() ? 0 : 1)
+                        )
                 }
             }
-                    .onAppear(perform: self.tagStore.start)
-                    .onDisappear(perform: self.tagStore.stop)
-                    .overlay(
-                            RoundedRectangle(cornerRadius: 20)
-                                    .stroke(Color.accentColor, lineWidth: 0.3)
-                    )
-
+            .onAppear(perform: self.tagStore.start)
+            .onDisappear(perform: self.tagStore.stop)
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color.accentColor, lineWidth: 0.3)
+            )
+            
             //button to say 'go'
             Button(action: self.tagStore.scan) {
                 Image(systemName: "arrow.down.doc")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 100, height: 100)
-                        .disabled(self.tagStore.selected == nil)
-                        .padding()
-            }
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 100, height: 100)
                     .disabled(self.tagStore.selected == nil)
+                    .padding()
+            }
+            .disabled(self.tagStore.selected == nil)
             Text("© Eric Betts 2020")
-                    .font(.footnote)
-                    .fontWeight(.light)
+                .font(.footnote)
+                .fontWeight(.light)
         }
-                .padding()
+        .padding()
     }
-
+    
     func filtered(_ urls: [URL]) -> [URL] {
         urls.filter {
             self.searchText.isEmpty ? true : $0.lastPathComponent.contains(self.searchText)
         }
     }
-
+    
     func selected(_ file: URL) -> Bool {
         file.lastPathComponent == self.tagStore.selected?.lastPathComponent
     }
-
+    
     func atDocumentsDir() -> Bool {
         tagStore.currentDir.standardizedFileURL == self.tagStore.documents.standardizedFileURL
     }
-
+    
     func title() -> String {
         if (atDocumentsDir()) {
             return "CattleGrid"
@@ -141,23 +141,57 @@ struct ListElement: View {
     let selected: Bool
     let isFile: Bool
     let cb: () -> Void
-
+    
     var body: some View {
         HStack {
             if (isFile) {
-                Text(name)
+                HStack {
+                    Text(name)
                         .foregroundColor(selected ? .primary : .secondary)
-                        .onTapGesture(perform: cb)
+                    
+                    Spacer()
+                    Image(systemName: "checkmark.circle").isHidden(!selected).padding(.trailing)
+                }
+                .contentShape(Rectangle())
+                .frame(maxWidth: .infinity)
+                .onTapGesture(perform: cb)
             } else { // Folder
                 HStack {
                     Text(name)
                     Text("")
-                            .frame(maxWidth: .infinity)
-                            .background(Color(UIColor.systemBackground)) //'invisible' tappable target
+                        .frame(maxWidth: .infinity)
+                        .background(Color(UIColor.systemBackground)) //'invisible' tappable target
                     Image(systemName: "chevron.right")
                 }
-                        .onTapGesture(perform: cb)
+                .onTapGesture(perform: cb)
             }
+        }
+    }
+}
+
+extension View {
+    /// Hide or show the view based on a boolean value.
+    ///
+    /// Example for visibility:
+    ///
+    ///     Text("Label")
+    ///         .isHidden(true)
+    ///
+    /// Example for complete removal:
+    ///
+    ///     Text("Label")
+    ///         .isHidden(true, remove: true)
+    ///
+    /// - Parameters:
+    ///   - hidden: Set to `false` to show the view. Set to `true` to hide the view.
+    ///   - remove: Boolean value indicating whether or not to remove the view.
+    @ViewBuilder func isHidden(_ hidden: Bool, remove: Bool = false) -> some View {
+        if hidden {
+            if !remove {
+                self.hidden()
+            }
+        } else {
+            self
         }
     }
 }
