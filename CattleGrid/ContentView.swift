@@ -47,11 +47,11 @@ struct MainScreen: View {
     
     var body: some View {
         
-        //File selector
         NavigationView {
             GeometryReader { geometry in
                 VStack() {
                     
+                    // Header
                     VStack {
                         if self.tagStore.lastPageWritten > 0 {
                             HStack {
@@ -71,6 +71,7 @@ struct MainScreen: View {
                     .padding(.top, geometry.safeAreaInsets.top)
                     .background(Color("BarColor"))
                     
+                    // File selector
                     Group {
                         if (tagStore.files.count > 0) {
                             List(tagStore.files, id: \.path) { file in
@@ -85,6 +86,7 @@ struct MainScreen: View {
                         }
                     }
                     
+                    // Footer
                     VStack {
                         //button to say 'go'
                         Button(action: self.tagStore.scan) {
