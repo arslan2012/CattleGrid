@@ -49,73 +49,78 @@ struct MainScreen: View {
         
         //File selector
         NavigationView {
-            VStack() {
-                
-                VStack {
-                    if self.tagStore.lastPageWritten > 0 {
-                        HStack {
-                            ProgressBar(value: tagStore.progress).frame(height: 20)
-                            Text("\(tagStore.progress * 100, specifier: "%.2f")%")
+            GeometryReader { geometry in
+                VStack() {
+                    
+                    VStack {
+                        if self.tagStore.lastPageWritten > 0 {
+                            HStack {
+                                ProgressBar(value: tagStore.progress).frame(height: 20)
+                                Text("\(tagStore.progress * 100, specifier: "%.2f")%")
+                                    .font(.subheadline)
+                            }
+                        }
+                        
+                        if self.tagStore.error != "" {
+                            Text(self.tagStore.error)
                                 .font(.subheadline)
+                                .foregroundColor(.red)
                         }
                     }
-                    if self.tagStore.error != "" {
-                        Text(self.tagStore.error)
-                            .font(.subheadline)
-                            .foregroundColor(.red)
+                    .frame(maxWidth: .infinity, minHeight: 60)
+                    .padding(.top, geometry.safeAreaInsets.top)
+                    .background(Color("BarColor"))
+                    
+                    Group {
+                        if (tagStore.files.count > 0) {
+                            List(tagStore.files, id: \.path) { file in
+                                ListElement(name: file.deletingPathExtension().lastPathComponent, selected: self.selected(file), isFile: (file.pathExtension == "bin"), cb: {
+                                    self.tagStore.load(file)
+                                })
+                            }.listStyle(PlainListStyle())
+                        } else {
+                            Spacer()
+                            Text("No figures").font(.headline)
+                            Spacer()
+                        }
                     }
+                    
+                    VStack {
+                        //button to say 'go'
+                        Button(action: self.tagStore.scan) {
+                            Image(systemName: "arrow.down.doc")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 100, height: 100)
+                                .disabled(self.tagStore.selected == nil)
+                                .padding()
+                        }
+                        .disabled(self.tagStore.selected == nil)
+                        Text("© Eric Betts 2020")
+                            .font(.footnote)
+                            .fontWeight(.light)
+                    }
+                    .padding(.bottom, geometry.safeAreaInsets.bottom)
+                    .frame(maxWidth: .infinity)
+                    .background(Color("BarColor"))
                 }
-                .frame(maxWidth: .infinity, minHeight: 50)
+                .edgesIgnoringSafeArea([.bottom, .top])
+                .navigationBarTitle(Text(title()), displayMode: .inline)
+                .navigationBarItems(
+                    leading: Button(action: {
+                        self.tagStore.clearSelected()
+                        self.tagStore.load(self.tagStore.currentDir.deletingLastPathComponent())
+                    }) {
+                        Image(systemName: "chevron.left")
+                        Text("Back")
+                    }
+                        .disabled(atDocumentsDir())
+                        .opacity(atDocumentsDir() ? 0 : 1)
+                )
+                .onAppear(perform: self.tagStore.start)
+                .onDisappear(perform: self.tagStore.stop)
                 
-                Group {
-                    if (tagStore.files.count > 0) {
-                        List(tagStore.files, id: \.path) { file in
-                            ListElement(name: file.deletingPathExtension().lastPathComponent, selected: self.selected(file), isFile: (file.pathExtension == "bin"), cb: {
-                                self.tagStore.load(file)
-                            })
-                        }.listStyle(PlainListStyle())
-                    } else {
-                        Spacer()
-                        Text("No figures").font(.headline)
-                        Spacer()
-                    }
-                }
-                
-                VStack {
-                    //button to say 'go'
-                    Button(action: self.tagStore.scan) {
-                        Image(systemName: "arrow.down.doc")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 100, height: 100)
-                            .disabled(self.tagStore.selected == nil)
-                            .padding()
-                    }
-                    .disabled(self.tagStore.selected == nil)
-                    Text("© Eric Betts 2020")
-                        .font(.footnote)
-                        .fontWeight(.light)
-                }
-                .padding(.bottom, 20)
-                .frame(maxWidth: .infinity)
-                .background(Color("BarColor"))
             }
-            .edgesIgnoringSafeArea(.bottom)
-            .navigationBarTitle(Text(title()), displayMode: .inline)
-            .navigationBarItems(
-                leading: Button(action: {
-                    self.tagStore.clearSelected()
-                    self.tagStore.load(self.tagStore.currentDir.deletingLastPathComponent())
-                }) {
-                    Image(systemName: "chevron.left")
-                    Text("Back")
-                }
-                    .disabled(atDocumentsDir())
-                    .opacity(atDocumentsDir() ? 0 : 1)
-            )
-            .onAppear(perform: self.tagStore.start)
-            .onDisappear(perform: self.tagStore.stop)
-            
         }
     }
     
