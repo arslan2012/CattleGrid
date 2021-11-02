@@ -50,27 +50,7 @@ struct MainScreen: View {
         NavigationView {
             GeometryReader { geometry in
                 VStack() {
-                    
-                    // Header
-                    VStack {
-                        if self.tagStore.lastPageWritten > 0 {
-                            HStack {
-                                ProgressBar(value: tagStore.progress).frame(height: 20)
-                                Text("\(tagStore.progress * 100, specifier: "%.2f")%")
-                                    .font(.subheadline)
-                            }
-                        }
-                        
-                        if self.tagStore.error != "" {
-                            Text(self.tagStore.error)
-                                .font(.subheadline)
-                                .foregroundColor(.red)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 60)
-                    .padding(.top, geometry.safeAreaInsets.top)
-                    .background(Color("BarColor"))
-                    
+                                       
                     // File selector
                     Group {
                         if (tagStore.files.count > 0) {
@@ -88,6 +68,12 @@ struct MainScreen: View {
                     
                     // Footer
                     VStack {
+                        
+                        Text(self.tagStore.error)
+                            .foregroundColor(.red)
+                            .padding(.top, 8)
+                            .isHidden(self.tagStore.error.isEmpty)
+                        
                         //button to say 'go'
                         Button(action: self.tagStore.scan) {
                             Image(systemName: "arrow.down.doc")
@@ -98,15 +84,12 @@ struct MainScreen: View {
                                 .padding()
                         }
                         .disabled(self.tagStore.selected == nil)
-                        Text("© Eric Betts 2020")
-                            .font(.footnote)
-                            .fontWeight(.light)
                     }
                     .padding(.bottom, geometry.safeAreaInsets.bottom)
                     .frame(maxWidth: .infinity)
                     .background(Color("BarColor"))
                 }
-                .edgesIgnoringSafeArea([.bottom, .top])
+                .edgesIgnoringSafeArea(.bottom)
                 .navigationBarTitle(Text(title()), displayMode: .inline)
                 .navigationBarItems(
                     leading: Button(action: {

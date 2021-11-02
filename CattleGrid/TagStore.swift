@@ -45,7 +45,6 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     static let shared = TagStore()
     @Published private(set) var files: [URL] = []
     @Published private(set) var selected: URL?
-    @Published private(set) var progress: Float = 0
     @Published private(set) var error: String = ""
     @Published private(set) var readingAvailable: Bool = NFCReaderSession.readingAvailable
 #if JAILBREAK
@@ -58,15 +57,11 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     
     let fm = FileManager.default
     
-    var lastPageWritten: UInt8 = 0 {
-        willSet(newVal) {
-            self.progress = Float(newVal) / Float(NTAG215Pages.total.rawValue)
-        }
-    }
-    
     var amiitool: Amiitool?
     var plain: Data = Data()
     var watcher: DirectoryWatcher? = nil
+    
+    private var session: NFCReaderSession?
     
     
     func start() {
@@ -175,10 +170,9 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
 #if targetEnvironment(simulator)
         self.error = "Unable to scan in simulator"
 #else
-        if let session = NFCTagReaderSession(pollingOption: [.iso14443], delegate: self, queue: nil) {
-            session.alertMessage = "Hold your device near a tag to write."
-            session.begin()
-        }
+        session = NFCTagReaderSession(pollingOption: [.iso14443], delegate: self, queue: nil)
+        session?.alertMessage = "Hold your device near a tag to write"
+        session?.begin()
 #endif
     }
     
@@ -195,10 +189,8 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         if (error.localizedDescription == "Session invalidated by user") {
             return
         }
-        DispatchQueue.main.async {
-            self.error = "Error during session: \(error.localizedDescription)"
-            self.lastPageWritten = 0
-        }
+        
+        session.invalidate(errorMessage: "Error during session: \(error.localizedDescription)")
     }
     
     func tagReaderSession(_ session: NFCTagReaderSession, didDetect tags: [NFCTag]) {
@@ -208,10 +200,8 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             session.connect(to: tags.first!) { (error: Error?) in
                 if ((error) != nil) {
                     print("Error during connect: \(error!.localizedDescription)")
-                    DispatchQueue.main.async {
-                        self.error = "Error during connect: \(error!.localizedDescription)"
-                        self.lastPageWritten = 0
-                    }
+                    
+                    session.invalidate(errorMessage: "Error during connect: \(error!.localizedDescription)")
                     return
                 }
                 
@@ -219,9 +209,7 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             }
         } else {
             print("Ignoring non-mifare tag")
-            DispatchQueue.main.async {
-                self.error = "Ignoring non-mifare tag"
-            }
+            session.invalidate(errorMessage: "Ignoring non-mifare tag")
         }
     }
     
@@ -230,36 +218,22 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         tag.sendMiFareCommand(commandPacket: read) { (data, error) in
             if ((error) != nil) {
                 print("Error during read: \(error!.localizedDescription)")
-                DispatchQueue.main.async {
-                    self.error = "Error during read: \(error!.localizedDescription)"
-                    self.lastPageWritten = 0
-                }
-                session.invalidate()
+                session.invalidate(errorMessage: "Error during read: \(error!.localizedDescription)")
                 return
             }
             
             guard data.count == 16 else {
                 print("Incorrect data size: \(data.hexDescription)")
-                DispatchQueue.main.async {
-                    self.error = "Couldn't read tag UID"
-                    self.lastPageWritten = 0
-                }
-                session.invalidate()
+                session.invalidate(errorMessage: "Couldn't read tag UID")
                 return
             }
             let cc = data.subdata(in: 12..<16)
             let size = cc[2];
             if (size == 0x12) {
-                DispatchQueue.main.async {
-                    self.error = "NTAG213"
-                }
-                session.invalidate()
+                session.invalidate(errorMessage: "NTAG213")
                 return
             } else if (size == 0x6D) {
-                DispatchQueue.main.async {
-                    self.error = "NTAG216"
-                }
-                session.invalidate()
+                session.invalidate(errorMessage: "NTAG216")
                 return
             } else if (size == 0x3E) {
                 //NTAG215
@@ -268,9 +242,7 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             }
             
             guard let amiitool = self.amiitool else {
-                DispatchQueue.main.async {
-                    self.error = "Internal error: amiitool not initialized"
-                }
+                session.invalidate(errorMessage: "Internal error: amiitool not initialized")
                 return
             }
             
@@ -278,28 +250,25 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             self.plain.replaceSubrange(468..<476, with: data.subdata(in: 0..<8))
             
             let modified = amiitool.pack(self.plain)
-            self.writeTag(tag, newImage: modified) { () in
+            self.writeTag(tag: tag, newImage: modified) { () in
                 print("done writing")
-                DispatchQueue.main.async {
-                    self.lastPageWritten = 0
-                    self.error = ""
-                }
+                session.alertMessage = "Writing Complete"
                 session.invalidate()
             }
         }
     }
     
-    func writeTag(_ tag: NFCMiFareTag, newImage: Data, completionHandler: @escaping () -> Void) {
-        self.writeUserPages(tag, startPage: NTAG215Pages.userMemoryFirst.rawValue, data: newImage) { () in
+    func writeTag(tag: NFCMiFareTag, newImage: Data, completionHandler: @escaping () -> Void) {
+        self.writeUserPages(tag: tag, startPage: NTAG215Pages.userMemoryFirst.rawValue, data: newImage) { () in
             let pwd = self.calculatePWD(tag.identifier)
             print("\(tag.identifier.hexDescription): \(pwd.hexDescription)")
-            self.writePage(tag, page: NTAG215Pages.pwd.rawValue, data: pwd) {
-                self.writePage(tag, page: NTAG215Pages.pack.rawValue, data: PACKRFUI) {
-                    self.writePage(tag, page: NTAG215Pages.capabilityContainer.rawValue, data: CC) {
-                        self.writePage(tag, page: NTAG215Pages.cfg0.rawValue, data: CFG0) {
-                            self.writePage(tag, page: NTAG215Pages.cfg1.rawValue, data: CFG1) {
-                                self.writePage(tag, page: NTAG215Pages.dynamicLockBits.rawValue, data: DLB) {
-                                    self.writePage(tag, page: NTAG215Pages.staticLockBits.rawValue, data: SLB) {
+            self.writePage(tag: tag, page: NTAG215Pages.pwd.rawValue, data: pwd) {
+                self.writePage(tag: tag, page: NTAG215Pages.pack.rawValue, data: PACKRFUI) {
+                    self.writePage(tag: tag, page: NTAG215Pages.capabilityContainer.rawValue, data: CC) {
+                        self.writePage(tag: tag, page: NTAG215Pages.cfg0.rawValue, data: CFG0) {
+                            self.writePage(tag: tag, page: NTAG215Pages.cfg1.rawValue, data: CFG1) {
+                                self.writePage(tag: tag, page: NTAG215Pages.dynamicLockBits.rawValue, data: DLB) {
+                                    self.writePage(tag: tag, page: NTAG215Pages.staticLockBits.rawValue, data: SLB) {
                                         completionHandler()
                                     }
                                 }
@@ -311,35 +280,30 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         }
     }
     
-    func writeUserPages(_ tag: NFCMiFareTag, startPage: UInt8, data: Data, completionHandler: @escaping () -> Void) {
+    func writeUserPages(tag: NFCMiFareTag, startPage: UInt8, data: Data, completionHandler: @escaping () -> Void) {
         if (startPage > NTAG215Pages.userMemoryLast.rawValue) {
             completionHandler()
             return
         }
         
         let page = data.page(startPage)
-        writePage(tag, page: startPage, data: page) {
-            self.writeUserPages(tag, startPage: startPage + 1, data: data) { () in
+        writePage(tag: tag, page: startPage, data: page) {
+            self.writeUserPages(tag: tag, startPage: startPage + 1, data: data) { () in
                 completionHandler()
             }
         }
     }
     
-    func writePage(_ tag: NFCMiFareTag, page: UInt8, data: Data, completionHandler: @escaping () -> Void) {
+    func writePage(tag: NFCMiFareTag, page: UInt8, data: Data, completionHandler: @escaping () -> Void) {
         print("Write page \(page) \(data.hexDescription)")
         let write = Data([MifareCommands.WRITE.rawValue, page]) + data
         tag.sendMiFareCommand(commandPacket: write) { (_, error) in
             if ((error) != nil) {
                 print("Error during write: \(error!.localizedDescription)")
-                DispatchQueue.main.async {
-                    self.error = "Error during write: \(error!.localizedDescription)"
-                    self.lastPageWritten = 0
-                }
+                self.session?.invalidate(errorMessage: "Error during write: \(error!.localizedDescription)")
                 return
             }
-            DispatchQueue.main.async {
-                self.lastPageWritten = page
-            }
+
             completionHandler()
         }
     }
