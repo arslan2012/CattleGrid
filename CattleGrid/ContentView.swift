@@ -11,6 +11,9 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var tagStore: TagStore
+    
+    @State private var searchText = ""
+    
 #if JAILBREAK
     let warning = "your phone needs to be at least iphone7 or above and iOS 13+ to use this app"
 #else
@@ -54,11 +57,13 @@ struct MainScreen: View {
                     // File selector
                     Group {
                         if (tagStore.files.count > 0) {
-                            List(tagStore.files, id: \.path) { file in
+                            List(searchResults, id: \.path) { file in
                                 ListElement(name: file.deletingPathExtension().lastPathComponent, selected: self.selected(file), isFile: (file.pathExtension == "bin"), cb: {
                                     self.tagStore.load(file)
                                 })
-                            }.listStyle(PlainListStyle())
+                            }
+                            .listStyle(PlainListStyle())
+                            .searchable(text: $searchText)
                         } else {
                             Spacer()
                             Text("No figures").font(.headline)
@@ -109,9 +114,11 @@ struct MainScreen: View {
         }
     }
     
-    func filtered(_ urls: [URL]) -> [URL] {
-        urls.filter {
-            self.searchText.isEmpty ? true : $0.lastPathComponent.contains(self.searchText)
+    var searchResults: [URL] {
+        if searchText.isEmpty {
+            return tagStore.files
+        } else {
+            return tagStore.files.filter { $0.absoluteString.contains(searchText) }
         }
     }
     
