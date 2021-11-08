@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		49E179ED2738531400023A9C /* CachedAsyncImage in Frameworks */ = {isa = PBXBuildFile; productRef = 49E179EC2738531400023A9C /* CachedAsyncImage */; };
+		49E179EF273935A600023A9C /* FileManagerContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E179EE273935A600023A9C /* FileManagerContent.swift */; };
 		6D610352244B5E74003B7482 /* DirectoryWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D610351244B5E74003B7482 /* DirectoryWatcher.swift */; };
 		6DC5860C24417199006DA042 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC5860B24417199006DA042 /* AppDelegate.swift */; };
 		6DC5860E24417199006DA042 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC5860D24417199006DA042 /* SceneDelegate.swift */; };
@@ -23,6 +25,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		49E179EE273935A600023A9C /* FileManagerContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileManagerContent.swift; sourceTree = "<group>"; };
 		6D610351244B5E74003B7482 /* DirectoryWatcher.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DirectoryWatcher.swift; sourceTree = "<group>"; };
 		6DC5860824417199006DA042 /* CattleGrid.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CattleGrid.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6DC5860B24417199006DA042 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -46,6 +49,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6DD45BC024423FC100C5C925 /* amiitool in Frameworks */,
+				49E179ED2738531400023A9C /* CachedAsyncImage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -84,6 +88,7 @@
 				6DC58616244171AB006DA042 /* LaunchScreen.storyboard */,
 				6DC58619244171AB006DA042 /* Info.plist */,
 				6DC58620244172B2006DA042 /* TagStore.swift */,
+				49E179EE273935A600023A9C /* FileManagerContent.swift */,
 				6DD45BC5244383AD00C5C925 /* Amiitool.swift */,
 			);
 			path = CattleGrid;
@@ -107,6 +112,7 @@
 			name = CattleGrid;
 			packageProductDependencies = (
 				6DD45BBF24423FC100C5C925 /* amiitool */,
+				49E179EC2738531400023A9C /* CachedAsyncImage */,
 			);
 			productName = CattleGrid;
 			productReference = 6DC5860824417199006DA042 /* CattleGrid.app */;
@@ -138,6 +144,7 @@
 			mainGroup = 6DC585FF24417199006DA042;
 			packageReferences = (
 				6DD45BBE24423FC100C5C925 /* XCRemoteSwiftPackageReference "amiitool" */,
+				49E179EB2738531400023A9C /* XCRemoteSwiftPackageReference "SwiftUI-CachedAsyncImage" */,
 			);
 			productRefGroup = 6DC5860924417199006DA042 /* Products */;
 			projectDirPath = "";
@@ -172,6 +179,7 @@
 				6DD45BC82443BCD300C5C925 /* ViewModifiers.swift in Sources */,
 				F533430F247F89C400AA4C6B /* Data+page.swift in Sources */,
 				6DC5860E24417199006DA042 /* SceneDelegate.swift in Sources */,
+				49E179EF273935A600023A9C /* FileManagerContent.swift in Sources */,
 				6DC58621244172B2006DA042 /* TagStore.swift in Sources */,
 				6DC5861024417199006DA042 /* ContentView.swift in Sources */,
 				6D610352244B5E74003B7482 /* DirectoryWatcher.swift in Sources */,
@@ -380,6 +388,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		49E179EB2738531400023A9C /* XCRemoteSwiftPackageReference "SwiftUI-CachedAsyncImage" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/lorenzofiamingo/SwiftUI-CachedAsyncImage";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 		6DD45BBE24423FC100C5C925 /* XCRemoteSwiftPackageReference "amiitool" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/arslan2012/amiitool.git";
@@ -391,6 +407,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		49E179EC2738531400023A9C /* CachedAsyncImage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 49E179EB2738531400023A9C /* XCRemoteSwiftPackageReference "SwiftUI-CachedAsyncImage" */;
+			productName = CachedAsyncImage;
+		};
 		6DD45BBF24423FC100C5C925 /* amiitool */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 6DD45BBE24423FC100C5C925 /* XCRemoteSwiftPackageReference "amiitool" */;

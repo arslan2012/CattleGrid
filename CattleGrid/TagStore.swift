@@ -43,10 +43,10 @@ let PACKRFUI = Data([0x80, 0x80, 0x00, 0x00])
 
 class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     static let shared = TagStore()
-    @Published private(set) var files: [URL] = []
-    @Published private(set) var selected: URL?
+    @Published private(set) var contents: [FileManagerContent] = []
     @Published private(set) var error: String = ""
     @Published private(set) var readingAvailable: Bool = NFCReaderSession.readingAvailable
+    
 #if JAILBREAK
     @Published private(set) var currentDir: URL = URL(fileURLWithPath: "/var/mobile/tagbin/", isDirectory: true)
     let documents = URL(fileURLWithPath: "/var/mobile/tagbin/", isDirectory: true)
@@ -109,58 +109,84 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     }
     
     func loadList() {
+        contents.removeAll()
+        
         let items = try? fm.contentsOfDirectory(at: self.currentDir, includingPropertiesForKeys: [], options: [.skipsHiddenFiles, .skipsPackageDescendants, .skipsSubdirectoryDescendants])
-        files = items!.filter({ (item) -> Bool in
+        let filteredFiles = items!.filter({ (item) -> Bool in
             let isDir = (try? item.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
             return isDir || (item.pathExtension == "bin")
         }).sorted(by: { $0.lastPathComponent < $1.lastPathComponent })
+        
+        for file in filteredFiles {
+            let isDir = (try? file.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
+            let fmc = FileManagerContent(url: file.absoluteURL, isDir: isDir)
+            contents.append(fmc)
+        }
     }
     
     func load(_ path: URL) {
         do {
-            clearSelected()
-
             let isDir = (try path.resourceValues(forKeys: [.isDirectoryKey])).isDirectory ?? false
             if (isDir) {
+                clearSelected()
                 loadFolder(path)
-            } else {
-                loadFile(path)
             }
         } catch {
             print("Couldn't read \(path)")
         }
     }
     
-    func loadFolder(_ path: URL) {
+    private func loadFolder(_ path: URL) {
         self.currentDir = path;
         self.loadList()
     }
     
-    func loadFile(_ path: URL) {
-        guard let amiitool = self.amiitool else {
-            self.error = "Internal error: amiitool not initialized"
-            return
+//    private func loadFile(_ path: URL) {
+//        guard let amiitool = self.amiitool else {
+//            self.error = "Internal error: amiitool not initialized"
+//            return
+//        }
+//
+//        do {
+//            let tag = try Data(contentsOf: path)
+//
+//            let start = NTAG_PAGE_SIZE * Int(NTAG215Pages.characterModelHead.rawValue)
+//            let end = NTAG_PAGE_SIZE * Int(NTAG215Pages.characterModelTail.rawValue + 1)
+//            let id = tag.subdata(in: start..<end)
+//            self.selectedCharacterId = id.hexDescription
+//            print("character id: \(id.hexDescription)")
+//
+//            let head = id.hexDescription.lowercased().prefix(8)
+//            let tail = id.hexDescription.lowercased().suffix(8)
+//
+//            self.selectedCharacterImageFilename = "icon_\(head)-\(tail).png"
+//
+//            plain = amiitool.unpack(tag)
+//            print("\(path.lastPathComponent) loaded")
+//            self.selected = path
+//        } catch {
+//            self.error = "Couldn't read \(path)"
+//        }
+//    }
+    
+    func hasSelection() -> Bool {
+        for content in contents {
+            if content.isSelected { return true }
         }
-        
-        do {
-            let tag = try Data(contentsOf: path)
-            
-            let start = NTAG_PAGE_SIZE * Int(NTAG215Pages.characterModelHead.rawValue)
-            let end = NTAG_PAGE_SIZE * Int(NTAG215Pages.characterModelTail.rawValue + 1)
-            let id = tag.subdata(in: start..<end)
-            print("character id: \(id.hexDescription)")
-            
-            plain = amiitool.unpack(tag)
-            print("\(path.lastPathComponent) loaded")
-            self.selected = path
-        } catch {
-            self.error = "Couldn't read \(path)"
-        }
+        return false
     }
     
     func clearSelected() {
-        self.selected = nil
+        for content in contents {
+            content.isSelected = false
+        }
+        
         self.error = ""
+    }
+    
+    func setSelected(content: FileManagerContent) {
+        clearSelected()
+        content.isSelected = true
     }
     
     func scan() {

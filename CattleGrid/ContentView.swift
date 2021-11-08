@@ -7,7 +7,7 @@
 //
 
 import SwiftUI
-
+import CachedAsyncImage
 
 struct ContentView: View {
     @EnvironmentObject var tagStore: TagStore
@@ -47,23 +47,59 @@ struct ContentView_Previews: PreviewProvider {
 struct MainScreen: View {
     @EnvironmentObject var tagStore: TagStore
     @State private var searchText: String = ""
+    @State private var imageUrl: String = ""
+    
+    let columns = [
+        GridItem(.fixed(200)),
+        GridItem(.fixed(200)),
+    ]
     
     var body: some View {
         
         NavigationView {
             GeometryReader { geometry in
                 VStack() {
-                                       
+                    
                     // File selector
                     Group {
-                        if (tagStore.files.count > 0) {
-                            List(searchResults, id: \.path) { file in
-                                ListElement(name: file.deletingPathExtension().lastPathComponent, selected: self.selected(file), isFile: (file.pathExtension == "bin"), cb: {
-                                    self.tagStore.load(file)
-                                })
+                        if (tagStore.contents.count > 0) {
+                            ScrollView {
+                                LazyVGrid(columns: columns, spacing:20) {
+                                    ForEach(searchResults, id: \.url) { content in
+                                        ListElement(content: content, selected: content.isSelected, isFile: content.isFile, cb: {
+                                            
+                                            if content.isFile {
+                                                content.isSelected = true
+                                                self.tagStore.setSelected(content: content)
+                                            }
+                                            
+                                            self.tagStore.load(content.url)
+                                            
+                                            if let characterImageFilename = content.characterImageFilename {
+                                                imageUrl = "https://raw.githubusercontent.com/N3evin/AmiiboAPI/master/images/\(characterImageFilename)"
+                                            }
+                                        })
+                                    }
+                                }
+                                .searchable(text: $searchText)
                             }
-                            .listStyle(PlainListStyle())
-                            .searchable(text: $searchText)
+                            //                            List(searchResults, id: \.url) { content in
+                            //                                ListElement(name: content.filenameWithoutExtension, selected: content.isSelected, isFile: content.isFile, cb: {
+                            //
+                            //                                    if content.isFile {
+                            //                                        content.isSelected = true
+                            //                                        self.tagStore.setSelected(content: content)
+                            //                                    }
+                            //
+                            //                                    self.tagStore.load(content.url)
+                            //
+                            //                                    if let characterImageFilename = content.characterImageFilename {
+                            //                                        imageUrl = "https://raw.githubusercontent.com/N3evin/AmiiboAPI/master/images/\(characterImageFilename)"
+                            //                                    }
+                            //                                })
+                            //                            }
+                            //                            .listStyle(PlainListStyle())
+                            //                            .searchable(text: $searchText)
                         } else {
                             Spacer()
                             Text("No figures").font(.headline)
@@ -78,17 +114,18 @@ struct MainScreen: View {
                             .foregroundColor(.red)
                             .padding(.top, 8)
                             .isHidden(self.tagStore.error.isEmpty)
-                        
-                        //button to say 'go'
-                        Button(action: self.tagStore.scan) {
-                            Image(systemName: "arrow.down.doc")
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 100, height: 100)
-                                .disabled(self.tagStore.selected == nil)
-                                .padding()
+                        HStack {
+                            //button to say 'go'
+                            Button(action: self.tagStore.scan) {
+                                Image(systemName: "arrow.down.doc")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 100, height: 100)
+                                    .disabled(!self.tagStore.hasSelection())
+                                    .padding()
+                            }
+                            .disabled(!self.tagStore.hasSelection())
                         }
-                        .disabled(self.tagStore.selected == nil)
                     }
                     .padding(.bottom, geometry.safeAreaInsets.bottom)
                     .frame(maxWidth: .infinity)
@@ -114,16 +151,12 @@ struct MainScreen: View {
         }
     }
     
-    var searchResults: [URL] {
+    var searchResults: [FileManagerContent] {
         if searchText.isEmpty {
-            return tagStore.files
+            return tagStore.contents
         } else {
-            return tagStore.files.filter { $0.absoluteString.contains(searchText) }
+            return tagStore.contents.filter { $0.url.absoluteString.contains(searchText) }
         }
-    }
-    
-    func selected(_ file: URL) -> Bool {
-        file.lastPathComponent == self.tagStore.selected?.lastPathComponent
     }
     
     func atDocumentsDir() -> Bool {
@@ -140,33 +173,51 @@ struct MainScreen: View {
 }
 
 struct ListElement: View {
-    let name: String
+    let content: FileManagerContent
     let selected: Bool
     let isFile: Bool
     let cb: () -> Void
     
     var body: some View {
-        HStack {
-            if (isFile) {
-                HStack {
-                    Text(name)
-                    Spacer()
-                    Image(systemName: "checkmark").isHidden(!selected).padding(.trailing)
+        if (isFile) {
+            VStack {
+                CachedAsyncImage(url: content.characterImageUrl) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 150, height: 150)
+                } placeholder: {
+                    Image(systemName: "photo")
+                        .imageScale(.large)
+                        .frame(maxWidth: 150, maxHeight: 150)
                 }
-                .contentShape(Rectangle())
-                .frame(maxWidth: .infinity)
-                .onTapGesture(perform: cb)
-            } else { // Folder
-                HStack {
-                    Text(name)
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                }
-                .contentShape(Rectangle())
-                .frame(maxWidth: .infinity)
-                .onTapGesture(perform: cb)
+                
+                Text(content.filenameWithoutExtension)
+                
+                Spacer()
             }
+            .padding()
+            .if(selected) {
+                $0.border(Color.blue, width: 4)
+            }
+            .contentShape(Rectangle())
+            .frame(maxWidth: .infinity, minHeight: 200)
+            .onTapGesture(perform: cb)
+        } else { // Folder
+            VStack {
+                Image(systemName: "folder")
+                    .resizable()
+                    .frame(width: 100, height: 100)
+                
+                Text(content.filenameWithoutExtension)
+                
+            }
+            .padding()
+            .contentShape(Rectangle())
+            .frame(maxWidth: .infinity)
+            .onTapGesture(perform: cb)
         }
+        
     }
 }
 
@@ -193,6 +244,14 @@ extension View {
             }
         } else {
             self
+        }
+    }
+    
+    func `if`<Content: View>(_ conditional: Bool, content: (Self) -> Content) -> TupleView<(Self?, Content?)> {
+        if conditional {
+            return TupleView((nil, content(self)))
+        } else {
+            return TupleView((self, nil))
         }
     }
 }
