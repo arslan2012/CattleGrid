@@ -198,7 +198,10 @@ struct ListElement: View {
             }
             .padding()
             .if(selected) {
-                $0.border(Color.blue, width: 4)
+                $0.overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.blue, lineWidth: 4)
+                )
             }
             .contentShape(Rectangle())
             .frame(maxWidth: .infinity, minHeight: 200)
