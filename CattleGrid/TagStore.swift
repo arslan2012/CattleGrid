@@ -58,7 +58,6 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
     let fm = FileManager.default
     
     var amiitool: Amiitool?
-    var plain: Data = Data()
     var watcher: DirectoryWatcher? = nil
     
     private var session: NFCReaderSession?
@@ -189,6 +188,15 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
         content.isSelected = true
     }
     
+    func getSelected() -> FileManagerContent? {
+        for content in contents {
+            if content.isSelected {
+                return content
+            }
+        }
+        return nil
+    }
+    
     func scan() {
         print("Scan")
         self.error = ""
@@ -273,9 +281,10 @@ class TagStore: NSObject, ObservableObject, NFCTagReaderSessionDelegate {
             }
             
             //Amiitool plain text stores first 2 pages (uid) towards the end
-            self.plain.replaceSubrange(468..<476, with: data.subdata(in: 0..<8))
+            var plain: Data = self.getSelected()!.plain
+            plain.replaceSubrange(468..<476, with: data.subdata(in: 0..<8))
             
-            let modified = amiitool.pack(self.plain)
+            let modified = amiitool.pack(plain)
             self.writeTag(tag: tag, newImage: modified) { () in
                 print("done writing")
                 session.alertMessage = "Writing Complete"
